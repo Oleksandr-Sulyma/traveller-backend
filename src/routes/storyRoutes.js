@@ -4,7 +4,7 @@ import { Router } from 'express';
 const router = Router();
 
 
-router.get('/stories');
+// router.get('/stories');
 //...
 
 export default router;
