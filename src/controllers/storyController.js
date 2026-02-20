@@ -30,3 +30,22 @@ export const getMyStories = async (req, res) => {
     throw createHttpError(500, "Failed to fetch user's stories");
   }
 };
+
+export const getStoryById = async (req, res, next) => {
+  try {
+    const { storyId } = req.params;
+
+    const story = await Story.findById(storyId)
+      .populate("category", "name")
+      .populate("ownerId", "name avatarUrl");
+
+    if (!story) {
+      return next(createHttpError(404, "Story not found"));
+    }
+
+    res.status(200).json(story);
+  } catch (error) {
+    console.error("Error fetching story by ID:", error);
+    next(createHttpError(500, "Failed to fetch story"));
+  }
+};
