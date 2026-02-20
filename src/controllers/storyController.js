@@ -36,10 +36,8 @@ export const getAllStories = async (req, res) => {
   const { page = 1, perPage = 10, category } = req.query;
   const skip = (page - 1) * perPage;
 
-  // Створюємо базовий запит (для всіх користувачів)
   const storiesQuery = Story.find();
 
-  // Фільтрація за категорією (ObjectId)
   if (category) {
     storiesQuery.where("category").equals(category);
   }
