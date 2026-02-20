@@ -29,6 +29,12 @@ const userSchema = new Schema(
       type: String,
       default: "",
     },
+    savedStories: [
+  {
+    type: Types.ObjectId,
+    ref: "Story",
+  },
+],
 // favorites: [
     //   {
     //     type: Types.ObjectId,
