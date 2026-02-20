@@ -1,5 +1,6 @@
 import createHttpError from "http-errors";
 import { Story } from "../models/story.js";
+import { Category } from "../models/category.js";
 
 export const getMyStories = async (req, res) => {
   try {
@@ -29,4 +30,38 @@ export const getMyStories = async (req, res) => {
     console.error("Error fetching user's stories:", error);
     throw createHttpError(500, "Failed to fetch user's stories");
   }
+};
+
+export const getAllStories = async (req, res) => {
+  const { page = 1, perPage = 10, category } = req.query;
+  const skip = (page - 1) * perPage;
+
+  // Створюємо базовий запит (для всіх користувачів)
+  const storiesQuery = Story.find();
+
+  // Фільтрація за категорією (ObjectId)
+  if (category) {
+    storiesQuery.where("category").equals(category);
+  }
+
+  const [totalStories, stories] = await Promise.all([
+    storiesQuery.clone().countDocuments(),
+    storiesQuery
+      .clone()
+      .skip(skip)
+      .limit(Number(perPage))
+      .sort({ createdAt: -1 })
+      .populate("category", "name")
+      .populate("ownerId", "name"),
+  ]);
+
+  const totalPages = Math.ceil(totalStories / perPage);
+
+  res.status(200).json({
+    page: Number(page),
+    perPage: Number(perPage),
+    totalStories,
+    totalPages,
+    stories,
+  });
 };

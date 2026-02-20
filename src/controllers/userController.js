@@ -1,5 +1,6 @@
 import { User } from "../models/user.js";
 import { Story } from "../models/story.js";
+// import createHttpError from "http-errors";
 
 export const addToSaved = async (req, res) => {
   const { storyId } = req.params;
@@ -13,7 +14,7 @@ export const addToSaved = async (req, res) => {
   const user = await User.findByIdAndUpdate(
     userId,
     { $addToSet: { savedStories: storyId } },
-    { new: true }
+    { new: true },
   ).populate("savedStories");
 
   res.status(200).json(user.savedStories);
@@ -26,7 +27,7 @@ export const removeFromSaved = async (req, res) => {
   const user = await User.findByIdAndUpdate(
     userId,
     { $pull: { savedStories: storyId } },
-    { new: true }
+    { new: true },
   ).populate("savedStories");
 
   res.status(200).json(user.savedStories);

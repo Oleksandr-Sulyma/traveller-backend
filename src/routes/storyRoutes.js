@@ -1,20 +1,20 @@
 import { Router } from "express";
 import { celebrate } from "celebrate";
 import { authenticate } from "../middleware/authenticate.js";
-import { getMyStories } from "../controllers/storyController.js";
+import { getMyStories, getAllStories } from "../controllers/storyController.js";
 import {
   createStorySchema,
   getMyStoriesSchema,
+  getAllStoriesSchema,
 } from "../validations/storyValidation.js";
 
 const router = Router();
 
-
 // 1. ПУБЛІЧНИЙ: Отримання всіх історій (пагінація + фільтр)
-// router.get('/', celebrate(schemas.getAllStoriesSchema), getAllStories);
+router.get("/", celebrate(getAllStoriesSchema), getAllStories);
 
 // 2. ПРИВАТНИЙ: Отримання власних історій (OwnStories)
-router.get("/own",  authenticate, celebrate(getMyStoriesSchema), getMyStories);
+router.get("/own", authenticate, celebrate(getMyStoriesSchema), getMyStories);
 
 // 3. ПРИВАТНИЙ: Отримання збережених історій (SavedStories)
 // router.get('/saved', authenticate, celebrate(schemas.getSavedStoriesSchema), getSavedStories);
@@ -31,7 +31,5 @@ router.get("/own",  authenticate, celebrate(getMyStoriesSchema), getMyStories);
 // 7. ПРИВАТНИЙ: Додавання/Видалення зі збережених
 // router.post('/:storyId/favorite', authenticate, addToFavorite);
 // router.delete('/:storyId/favorite', authenticate, removeFromFavorite);
-
-
 
 export default router;
