@@ -7,7 +7,7 @@ const storySchema = new mongoose.Schema(
       maxlength: 80,
       required: true,
     },
-    article: {
+    description: {
       type: String,
       maxlength: 2500,
       required: true,
