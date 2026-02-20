@@ -1,0 +1,16 @@
+import { Joi, Segments } from "celebrate";
+
+export const createStorySchema = {
+  [Segments.BODY]: Joi.object({
+    title: Joi.string().max(80).required(),
+    description: Joi.string().max(2500).required(),
+    category: Joi.string().required(),
+  }),
+};
+
+export const getMyStoriesSchema = {
+  [Segments.QUERY]: Joi.object({
+    page: Joi.number().integer().min(1).default(1),
+    limit: Joi.number().integer().min(1).max(50).default(10),
+  }),
+};
