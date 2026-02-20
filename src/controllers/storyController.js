@@ -1,5 +1,5 @@
-import { createHttpError } from "http-errors";
-import Story from "../models/Story.js";
+import createHttpError from "http-errors";
+import Story from "../models/story.js";
 
 export const getMyStories = async (req, res) => {
   const { page = 1, limit = 10 } = req.query;

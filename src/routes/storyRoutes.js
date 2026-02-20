@@ -9,7 +9,7 @@ import {
 
 const router = Router();
 
-router.get("/stories");
+// router.get('/stories');
 //...
 router.get(
   "/myStories",
