@@ -1,6 +1,6 @@
-import { Schema, model, Types } from "mongoose";
+import mongoose from "mongoose";
 
-const userSchema = new Schema(
+const userSchema = new mongoose.Schema(
   {
     name: {
       type: String,
@@ -29,17 +29,17 @@ const userSchema = new Schema(
       type: String,
       default: "",
     },
-// favorites: [
-    //   {
-    //     type: Types.ObjectId,
-    //     ref: "Story",
-    //   },
-    // ],
+    savedStories: [
+      {
+        type: mongoose.Types.ObjectId,
+        ref: "Story",
+      },
+    ],
   },
   {
     timestamps: true,
     versionKey: false,
-  }
+  },
 );
 
 userSchema.methods.toJSON = function () {
@@ -48,5 +48,4 @@ userSchema.methods.toJSON = function () {
   return obj;
 };
 
-export const User = model("User", userSchema);
-
+export const User = mongoose.model("User", userSchema);
