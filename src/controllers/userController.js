@@ -31,3 +31,32 @@ export const removeFromSaved = async (req, res) => {
 
   res.status(200).json(user.savedStories);
 };
+
+//створити ПРИВАТНИЙ ендпоінт для ОТРИМАННЯ збережених історій + пагінація
+export const getSavedStories = async (req, res) => {
+  const userId = req.user._id;
+
+  const page = parseInt(req.query.page) || 1;
+  const perPage = parseInt(req.query.perPage) || 10;
+
+  const skip = (page - 1) * perPage;
+
+  const user = await User.findById(userId);
+
+  const total = user.savedStories.length;
+
+  const stories = await Story.find({
+    _id: { $in: user.savedStories },
+  })
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(perPage);
+
+  res.status(200).json({
+    data: stories,
+    page,
+    perPage,
+    total,
+    totalPages: Math.ceil(total / perPage),
+  });
+};
