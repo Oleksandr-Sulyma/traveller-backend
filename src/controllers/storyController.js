@@ -17,7 +17,7 @@ export const getMyStories = async (req, res) => {
   const total = await Story.countDocuments({ ownerId: userId });
 
   res.status(200).json({
-    stories: stories || [], // Повертаємо порожній масив, якщо історій немає
+    stories: stories || [],
     pagination: {
       page: parseInt(page),
       limit: parseInt(limit),
