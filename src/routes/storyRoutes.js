@@ -4,9 +4,13 @@ import { authenticate } from "../middleware/authenticate.js";
 import {
   getMyStories,addToSave,
     removeFromSave,
-    getSavedStories,
+  getSavedStories,
    } from "../controllers/storyController.js";
 import * as schemas from "../validations/storyValidation.js";
+
+import { upload } from "../middleware/multer.js";
+import { createStory, updateStory } from "../controllers/storyController.js";
+
 
 const router = Router();
 
@@ -24,10 +28,10 @@ router.get('/saved', authenticate, celebrate(schemas.getSavedStoriesSchema), get
 // router.get('/:storyId', getStoryById);
 
 // 5. ПРИВАТНИЙ: Створення історії (Приватний + завантаження фото + валідація body)
-// router.post('/', authenticate, upload.single('img'), celebrate(schemas.createStorySchema), createStory);
+router.post('/stories', authenticate, upload.single('img'), celebrate(schemas.createStorySchema), createStory);
 
 // 6. ПРИВАТНИЙ: Редагування історії (Приватний + завантаження фото + валідація params/body)
-// router.patch('/:storyId', authenticate, upload.single('img'), celebrate(schemas.updateStorySchema), updateStory);
+router.patch('/stories/:storyId', authenticate, upload.single('img'), celebrate(schemas.updateStorySchema), updateStory);
 
 // 7. ПРИВАТНИЙ: Додавання/Видалення зі збережених
 router.post('/:storyId/save', authenticate, addToSave);
