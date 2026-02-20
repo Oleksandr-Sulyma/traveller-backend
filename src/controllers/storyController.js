@@ -3,15 +3,15 @@ import { Story } from "../models/story.js";
 
 export const getMyStories = async (req, res) => {
   try {
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, perPage = 10 } = req.query;
     const userId = req.user._id;
-    const skip = (page - 1) * limit;
+    const skip = (page - 1) * perPage;
 
     const stories = await Story.find({ ownerId: userId })
       .populate("category", "name")
       .populate("ownerId", "name avatarUrl")
       .skip(skip)
-      .limit(limit)
+      .limit(perPage)
       .sort({ favoriteCount: -1, createdAt: -1 });
 
     const total = await Story.countDocuments({ ownerId: userId });
@@ -20,9 +20,9 @@ export const getMyStories = async (req, res) => {
       stories: stories || [],
       pagination: {
         page: parseInt(page),
-        limit: parseInt(limit),
+        perPage: parseInt(perPage),
         total,
-        pages: Math.ceil(total / limit),
+        totalPages: Math.ceil(total / perPage),
       },
     });
   } catch (error) {
