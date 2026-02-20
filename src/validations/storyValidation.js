@@ -3,7 +3,8 @@ import { Joi, Segments } from "celebrate";
 export const createStorySchema = {
   [Segments.BODY]: Joi.object({
     title: Joi.string().max(80).required(),
-    description: Joi.string().max(2500).required(),
+    article: Joi.string().max(2500).required(),
+    img: Joi.string().required(),
     category: Joi.string().required(),
   }),
 };
