@@ -38,4 +38,8 @@ const storySchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-export default mongoose.model("Story", storySchema);
+storySchema.index({ category: 1 });
+storySchema.index({ ownerId: 1 });
+storySchema.index({ favoriteCount: -1, createdAt: -1 });
+
+export const Story = mongoose.model("Story", storySchema);
