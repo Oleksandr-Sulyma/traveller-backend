@@ -1,5 +1,5 @@
 import { User } from "../models/user.js";
-import { Story } from "../models/story.js";
+import  Story  from "../models/story.js";
 
 export const addToSaved = async (req, res) => {
   const { storyId } = req.params;
