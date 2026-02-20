@@ -1,30 +1,47 @@
-import jwt from "jsonwebtoken";
+// src/middleware/authenticate.js
+
+import createHttpError from "http-errors";
+import { Session } from "../models/session.js";
 import { User } from "../models/user.js";
 
 export const authenticate = async (req, res, next) => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader) {
-    return res.status(401).json({ message: "Not authorized" });
+  // 1. Перевіряємо наявність accessToken
+  if (!req.cookies.accessToken) {
+    next(createHttpError(401, "Missing access token"));
+    return;
   }
 
-  const [bearer, token] = authHeader.split(" ");
+  // 2. Якщо access токен існує, шукаємо сесію
+  const session = await Session.findOne({
+    accessToken: req.cookies.accessToken,
+  });
 
-  if (bearer !== "Bearer" || !token) {
-    return res.status(401).json({ message: "Not authorized" });
+  // 3. Якщо такої сесії нема, повертаємо помилку
+  if (!session) {
+    next(createHttpError(401, "Session not found"));
+    return;
   }
 
-  try {
-    const { id } = jwt.verify(token, process.env.JWT_SECRET);
+  // 4. Перевіряємо термін дії access токена
+  const isAccessTokenExpired =
+    new Date() > new Date(session.accessTokenValidUntil);
 
-    const user = await User.findById(id);
-    if (!user) {
-      return res.status(401).json({ message: "Not authorized" });
-    }
-
-    req.user = user;
-    next();
-  } catch (error) {
-    return res.status(401).json({ message: "Not authorized" });
+  if (isAccessTokenExpired) {
+    return next(createHttpError(401, "Access token expired"));
   }
+
+  // 5. Якщо з токеном все добре і сесія існує, шукаємо користувача
+  const user = await User.findById(session.userId);
+
+  // 6. Якщо користувача не знайдено
+  if (!user) {
+    next(createHttpError(401));
+    return;
+  }
+
+  // 7. Якщо користувач існує, додаємо його до запиту
+  req.user = user;
+
+  // 8. Передаємо управління далі
+  next();
 };
