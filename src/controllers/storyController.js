@@ -1,5 +1,5 @@
-import { createHttpError } from "http-errors";
-import Story from "../models/story.js";
+import createHttpError  from "http-errors";
+import {Story} from "../models/story.js";
 
 export const getMyStories = async (req, res) => {
   const { page = 1, limit = 10 } = req.query;
@@ -12,7 +12,7 @@ export const getMyStories = async (req, res) => {
     .populate("ownerId", "name avatarUrl")
     .skip(skip)
     .limit(limit)
-    .sort({ date: -1 });
+    .sort({ favoriteCount: -1, createdAt: -1 });
 
   const total = await Story.countDocuments({ ownerId: userId });
 
