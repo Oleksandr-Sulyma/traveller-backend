@@ -15,7 +15,7 @@ export const registerUser = async (req, res, next) => {
   const existingUser = await User.findOne({ email });
 
   if (existingUser) {
-    return next(createHttpError(409, "Email in use"));
+    throw createHttpError(409, "Email in use");
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -39,7 +39,7 @@ export const loginUser = async (req, res, next) => {
   const user = await User.findOne({ email });
 
   if (!user || !(await bcrypt.compare(password, user.password))) {
-    return next(createHttpError(401, "Invalid credentials"));
+    throw createHttpError(401, "Invalid credentials");
   }
 
   // Видаляємо стару сесію користувача перед створенням нової
@@ -61,11 +61,11 @@ export const refreshUserSession = async (req, res, next) => {
   });
 
   if (!session) {
-    return next(createHttpError(401, "Session not found"));
+    throw createHttpError(401, "Session not found");
   }
 
   if (new Date() > new Date(session.refreshTokenValidUntil)) {
-    return next(createHttpError(401, "Session token expired"));
+    throw createHttpError(401, "Session token expired");
   }
 
   await Session.deleteOne({
@@ -134,7 +134,7 @@ export const resetPassword = async (req, res, next) => {
 
   const user = await User.findOne({ _id: payload.sub, email: payload.email });
   if (!user) {
-    return next(createHttpError(404, "User not found"));
+    throw createHttpError(404, "User not found");
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -149,7 +149,7 @@ export const resetPassword = async (req, res, next) => {
   res.status(200).json({ message: "Password reset successfully" });
 };
 
-export const checkSession = async (req, res) => {
+export const checkSession = async (req, res, next) => {
   try {
     const { sessionId, accessToken, refreshToken } = req.cookies;
 
@@ -179,9 +179,11 @@ export const checkSession = async (req, res) => {
 
     res.status(200).json({ success: true, session: session._id });
   } catch (error) {
-    throw createHttpError(
+    return next(
+    createHttpError(
       error.status || error.statusCode || 500,
       error.message,
+      )
     );
   }
 };
