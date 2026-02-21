@@ -1,13 +1,13 @@
 // src/middleware/authenticate.js
 
-import createHttpError from "http-errors";
-import { Session } from "../models/session.js";
-import { User } from "../models/user.js";
+import createHttpError from 'http-errors';
+import { Session } from '../models/session.js';
+import { User } from '../models/user.js';
 
 export const authenticate = async (req, res, next) => {
   // 1. Перевіряємо наявність accessToken
   if (!req.cookies.accessToken) {
-    throw (createHttpError(401, "Missing access token"));
+    throw createHttpError(401, 'Missing access token');
   }
 
   // 2. Якщо access токен існує, шукаємо сесію
@@ -17,7 +17,7 @@ export const authenticate = async (req, res, next) => {
 
   // 3. Якщо такої сесії нема, повертаємо помилку
   if (!session) {
-    throw(createHttpError(401, "Session not found"));
+    throw createHttpError(401, 'Session not found');
   }
 
   // 4. Перевіряємо термін дії access токена
@@ -25,7 +25,7 @@ export const authenticate = async (req, res, next) => {
     new Date() > new Date(session.accessTokenValidUntil);
 
   if (isAccessTokenExpired) {
-     throw(createHttpError(401, "Access token expired"));
+    throw createHttpError(401, 'Access token expired');
   }
 
   // 5. Якщо з токеном все добре і сесія існує, шукаємо користувача
@@ -33,8 +33,7 @@ export const authenticate = async (req, res, next) => {
 
   // 6. Якщо користувача не знайдено
   if (!user) {
-    throw(createHttpError(401));
-
+    throw createHttpError(401);
   }
 
   // 7. Якщо користувач існує, додаємо його до запиту

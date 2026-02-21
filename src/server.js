@@ -9,11 +9,11 @@ import { logger } from './middleware/logger.js';
 import { notFoundHandler } from './middleware/notFoundHandler.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
-import authRoutes from "./routes/authRoutes.js";
-import userRoutes from "./routes/userRoutes.js";
-import storyRoutes from "./routes/storyRoutes.js";
+import authRoutes from './routes/authRoutes.js';
+import userRoutes from './routes/userRoutes.js';
+import storyRoutes from './routes/storyRoutes.js';
 
-import cookieParser from "cookie-parser";
+import cookieParser from 'cookie-parser';
 
 const app = express();
 const PORT = process.env.PORT ?? 5000;

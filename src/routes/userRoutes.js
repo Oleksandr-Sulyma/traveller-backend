@@ -1,5 +1,5 @@
-import { Router } from "express";
-import { authenticate } from "../middleware/authenticate.js";
+import { Router } from 'express';
+import { authenticate } from '../middleware/authenticate.js';
 
 import {getAllUsers, getCurrentUser, getUserById, updateUserAvatar, updateUserInfo} from "../controllers/userController.js";
 import { getAllUsersSchema } from "../validations/userValidation.js";
