@@ -82,7 +82,8 @@ export const refreshUserSession = async (req, res) => {
   res.status(200).json({
     message: "Session refreshed",
   });
-  
+}
+
 export const requestResetEmail = async (req, res, next) => {
   try {
     const { email } = req.body;

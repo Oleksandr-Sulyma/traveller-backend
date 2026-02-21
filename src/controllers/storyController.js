@@ -248,4 +248,4 @@ export const updateStory = async (req, res) => {
     console.error("Error updating story:", error);
     throw createHttpError(500, "Failed to update story");
   }
-
+}
