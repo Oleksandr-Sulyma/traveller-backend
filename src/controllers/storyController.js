@@ -23,7 +23,7 @@ export const getMyStories = async (req, res) => {
       page: parseInt(page),
       perPage: parseInt(perPage),
       total,
-      pages: Math.ceil(total / perPage),
+      totalPages: Math.ceil(total / perPage),
     },
   });
 };
@@ -34,7 +34,7 @@ export const addToSave = async (req, res) => {
 
   const story = await Story.findById(storyId);
   if (!story) {
-    return res.status(404).json({ message: "Story not found" });
+    throw createHttpError(404, "Story not found");
   }
 
   const user = await User.findByIdAndUpdate(
@@ -61,7 +61,6 @@ export const removeFromSave = async (req, res) => {
 
 export const getSavedStories = async (req, res) => {
   const userId = req.user._id;
-  
   const { page = 1, perPage = 10 } = req.query;
 
   const skip = (page - 1) * perPage;
@@ -69,7 +68,6 @@ export const getSavedStories = async (req, res) => {
   const user = await User.findById(userId);
 
   const savedIds = user.savedStories || [];
-
   const total = savedIds.length;
 
   const stories = await Story.find({
@@ -82,8 +80,8 @@ export const getSavedStories = async (req, res) => {
   res.status(200).json({
     data: stories,
     pagination: {
-      page,
-      perPage,
+      page: parseInt(page),
+      perPage: parseInt(perPage),
       total,
       totalPages: Math.ceil(total / perPage),
     },
@@ -99,12 +97,11 @@ export const getStoryById = async (req, res, next) => {
       .populate("ownerId", "name avatarUrl");
 
     if (!story) {
-      return next(createHttpError(404, "Story not found"));
+      throw createHttpError(404, "Story not found");
     }
 
     res.status(200).json(story);
   } catch (error) {
-    console.error("Error fetching story by ID:", error);
-    next(createHttpError(500, "Failed to fetch story"));
+    next(error);
   }
 };
