@@ -1,12 +1,13 @@
 import { Router } from "express";
 import { celebrate } from "celebrate";
 import { authenticate } from "../middleware/authenticate.js";
+import { getMyStories, getStoryById } from "../controllers/storyController.js";
 import {
-  getMyStories,addToSave,
-    removeFromSave,
-    getSavedStories,
-   } from "../controllers/storyController.js";
-import * as schemas from "../validations/storyValidation.js";
+  createStorySchema,
+  getMyStoriesSchema,
+  getStoryByIdSchema,
+} from "../validations/storyValidation.js";
+
 
 const router = Router();
 
@@ -21,7 +22,7 @@ router.get("/own",  authenticate, celebrate(schemas.getMyStoriesSchema), getMySt
 router.get('/saved', authenticate, celebrate(schemas.getSavedStoriesSchema), getSavedStories);
 
 // 4. ПУБЛІЧНИЙ: Отримання однієї історії за ID
-// router.get('/:storyId', getStoryById);
+router.get('/:storyId', celebrate(getStoryByIdSchema), getStoryById);
 
 // 5. ПРИВАТНИЙ: Створення історії (Приватний + завантаження фото + валідація body)
 // router.post('/', authenticate, upload.single('img'), celebrate(schemas.createStorySchema), createStory);

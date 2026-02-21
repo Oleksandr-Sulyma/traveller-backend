@@ -22,3 +22,16 @@ export const getSavedStoriesSchema = {
     perPage: Joi.number().integer().min(1).max(50).default(10),
   }),
 };
+
+export const getStoryByIdSchema = {
+  [Segments.PARAMS]: Joi.object({
+    storyId: Joi.string()
+      .custom((value, helpers) => {
+        if (!mongoose.Types.ObjectId.isValid(value)) {
+          return helpers.error("any.invalid");
+        }
+        return value;
+      })
+      .required(),
+  }),
+};
