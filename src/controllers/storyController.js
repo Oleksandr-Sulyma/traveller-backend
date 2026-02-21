@@ -171,7 +171,6 @@ export const createStory = async (req, res) => {
       category: categoryEnity._id,
       img: uploadedImg.secure_url,
       ownerId: req.user._id,
-      date: new Date().toISOString(),
     });
 
     res.status(201).json({
@@ -180,7 +179,7 @@ export const createStory = async (req, res) => {
       article: newStory.article,
       category: newStory.category,
       ownerId: newStory.ownerId,
-      date: newStory.date,
+      date: newStory.createdAt,
     });
   } catch (error) {
     console.error('Error creating story:', error);
@@ -195,7 +194,11 @@ export const updateStory = async (req, res) => {
 
   const imgBuffer = req.file ? req.file.buffer : null;
 
-  const uploadedImgUrl = await uploadFileOrThrowError(imgBuffer)
+  let uploadedImgUrl = null;
+
+if (imgBuffer) {
+  uploadedImgUrl = await uploadFileOrThrowError(imgBuffer);
+}
 
 
 
@@ -211,13 +214,13 @@ export const updateStory = async (req, res) => {
   }
 
   if (category) {
-    const categoryEnity = await Category.findOne({ name: category });
+    const categoryEntity = await Category.findOne({ name: category });
 
-    if (!categoryEnity) {
+    if (!categoryEntity) {
       throw createHttpError(400, 'Invalid category');
     }
 
-    story.category = categoryEnity._id;
+    story.category = categoryEntity._id;
   }
   try {
     if (title) story.title = title.trim();
@@ -233,7 +236,7 @@ export const updateStory = async (req, res) => {
       category: story.category,
       img: story.img,
       ownerId: story.ownerId,
-      date: story.date,
+      date: story.createdAt,
     });
   } catch (error) {
     console.error('Error updating story:', error);
