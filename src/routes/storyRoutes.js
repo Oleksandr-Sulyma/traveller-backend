@@ -1,15 +1,21 @@
 import { Router } from "express";
 import { celebrate } from "celebrate";
 import { authenticate } from "../middleware/authenticate.js";
-import { 
-    getMyStories, 
-    getAllStories, 
-    getStoryById, 
-    getSavedStories, 
-    addToSave, 
-    removeFromSave 
+import {
+    getMyStories,
+    getAllStories,
+    getStoryById,
+    getSavedStories,
+    addToSave,
+    removeFromSave,
+    createStory,
+    updateStory
 } from "../controllers/storyController.js";
 import * as schemas from "../validations/storyValidation.js";
+
+import { upload } from "../middleware/multer.js";
+import { createStory, updateStory } from "../controllers/storyController.js";
+
 
 const router = Router();
 
@@ -25,11 +31,11 @@ router.get("/stories/own", authenticate, celebrate(schemas.getMyStoriesSchema), 
 // 4. ПРИВАТНИЙ: Отримання збережених історій (SavedStories)
 router.get('/stories/saved', authenticate, celebrate(schemas.getSavedStoriesSchema), getSavedStories);
 
-// 5. ПРИВАТНИЙ: Створення історії (Завантаження фото додаси пізніше)
-// router.post('/stories/', authenticate, upload.single('img'), celebrate(schemas.createStorySchema), createStory);
+// 5. ПРИВАТНИЙ: Створення історії (Приватний + завантаження фото + валідація body)
+router.post('/stories', authenticate, upload.single('img'), celebrate(schemas.createStorySchema), createStory);
 
-// 6. ПРИВАТНИЙ: Редагування історії
-// router.patch('/stories/:storyId', authenticate, upload.single('img'), celebrate(schemas.updateStorySchema), updateStory);
+// 6. ПРИВАТНИЙ: Редагування історії (Приватний + завантаження фото + валідація params/body)
+router.patch('/stories/:storyId', authenticate, upload.single('img'), celebrate(schemas.updateStorySchema), updateStory);
 
 // 7. ПРИВАТНИЙ: Додавання/Видалення зі збережених
 router.post('/stories/:storyId/save', authenticate, addToSave);
