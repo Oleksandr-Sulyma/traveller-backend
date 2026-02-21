@@ -91,6 +91,10 @@ export const addToSave = async (req, res) => {
     { new: true },
   ).populate("savedStories");
 
+  if (!user) {
+    throw createHttpError(404, "User not found");
+  }
+
   res.status(200).json(user.savedStories);
 };
 
@@ -104,12 +108,15 @@ export const removeFromSave = async (req, res) => {
     { new: true },
   ).populate("savedStories");
 
+  if (!user) {
+    throw createHttpError(404, "User not found");
+  }
+
   res.status(200).json(user.savedStories);
 };
 
 export const getSavedStories = async (req, res) => {
   const userId = req.user._id;
-
   const { page = 1, perPage = 10 } = req.query;
   const skip = (page - 1) * perPage;
 

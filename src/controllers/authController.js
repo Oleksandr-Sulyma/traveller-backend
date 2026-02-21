@@ -1,4 +1,5 @@
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 import createHttpError from 'http-errors';
 import { User } from '../models/user.js';
 import { Session } from '../models/session.js';
@@ -11,7 +12,7 @@ export const registerUser = async (req, res) => {
   const existingUser = await User.findOne({ email });
 
   if (existingUser) {
-    throw createHttpError(400, "Email in use");
+    throw createHttpError(409, "Email in use");
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -23,7 +24,6 @@ export const registerUser = async (req, res) => {
   });
 
   const newSession = await createSession(newUser._id);
-
   setSessionCookies(res, newSession);
 
   res.status(201).json(newUser);
@@ -39,7 +39,6 @@ export const loginUser = async (req, res) => {
   }
 
   const isValidPassword = await bcrypt.compare(password, user.password);
-
   if (!isValidPassword) {
     throw createHttpError(401, "Invalid credentials");
   }
@@ -47,7 +46,6 @@ export const loginUser = async (req, res) => {
   await Session.deleteMany({ userId: user._id });
 
   const newSession = await createSession(user._id);
-
   setSessionCookies(res, newSession);
 
   res.status(200).json({
@@ -70,7 +68,6 @@ export const refreshUserSession = async (req, res) => {
 
   if (isSessionTokenExpired) {
     await Session.deleteOne({ _id: session._id });
-
     throw createHttpError(401, "Session token expired");
   }
 
@@ -91,7 +88,9 @@ export const requestResetEmail = async (req, res, next) => {
     const { email } = req.body;
     const user = await User.findOne({ email });
     if (!user) {
-      return next(createHttpError(404, "User not found"));
+      return res.status(200).json({
+      message: 'Password reset email sent successfully',
+    });
     }
 
     const resetToken = crypto.randomBytes(20).toString("hex");
@@ -120,6 +119,6 @@ export const requestResetEmail = async (req, res, next) => {
       message: "Password reset email sent successfully",
     });
   } catch (err) {
-    next(createHttpError(500, err.message));
+    throw createHttpError(500, err.message);
   }
 };
