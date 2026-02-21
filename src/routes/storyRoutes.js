@@ -27,17 +27,13 @@ router.get(
 );
 
 // 3. ПРИВАТНИЙ: Отримання власних історій (OwnStories)
-router.get(
-  '/stories/own',
-  authenticate,
-  celebrate(schemas.getMyStoriesSchema),
-  getMyStories,
-);
+router.use(authenticate);
+
+router.get('/stories/own', celebrate(schemas.getMyStoriesSchema), getMyStories);
 
 // 4. ПРИВАТНИЙ: Отримання збережених історій (SavedStories)
 router.get(
   '/stories/saved',
-  authenticate,
   celebrate(schemas.getSavedStoriesSchema),
   getSavedStories,
 );
@@ -45,7 +41,6 @@ router.get(
 // 5. ПРИВАТНИЙ: Створення історії (Приватний + завантаження фото + валідація body)
 router.post(
   '/stories',
-  authenticate,
   upload.single('img'),
   celebrate(schemas.createStorySchema),
   createStory,
@@ -54,14 +49,13 @@ router.post(
 // 6. ПРИВАТНИЙ: Редагування історії (Приватний + завантаження фото + валідація params/body)
 router.patch(
   '/stories/:storyId',
-  authenticate,
   upload.single('img'),
   celebrate(schemas.updateStorySchema),
   updateStory,
 );
 
 // 7. ПРИВАТНИЙ: Додавання/Видалення зі збережених
-router.post('/stories/:storyId/save', authenticate, addToSave);
-router.delete('/stories/:storyId/save', authenticate, removeFromSave);
+router.post('/stories/:storyId/save', addToSave);
+router.delete('/stories/:storyId/save', removeFromSave);
 
 export default router;
