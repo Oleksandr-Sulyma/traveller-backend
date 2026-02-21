@@ -1,18 +1,29 @@
 import { Router } from "express";
-import {
-  loginUserSchema,
-  registerUserSchema,
-} from "../validations/authValidation.js";
 import { celebrate } from "celebrate";
-import { registerUser, loginUser, checkSession } from "../controllers/authController.js";
+import { 
+  loginUserSchema, 
+  registerUserSchema, 
+  requestResetEmailSchema 
+} from '../validations/authValidation.js';
+import { 
+  registerUser, 
+  loginUser, 
+  refreshUserSession, 
+  requestResetEmail, 
+  logoutUser 
+} from '../controllers/authController.js';
 import { authenticate } from "../middleware/authenticate.js";
 
 const router = Router();
 
 router.post("/auth/register", celebrate(registerUserSchema), registerUser);
 router.post("/auth/login", celebrate(loginUserSchema), loginUser);
-router.get("/auth/session", authenticate, checkSession);
-//...
+router.post("/auth/refresh", refreshUserSession);
+router.post("/auth/request-reset-email", celebrate(requestResetEmailSchema), requestResetEmail);
+router.post("/auth/logout", authenticate, logoutUser);
+
+// Потрібно буде додати пізніше:
+// router.post("/auth/reset-password", celebrate(resetPasswordSchema), resetPassword);
+// router.get("/auth/check", checkSession);
 
 export default router;
-
