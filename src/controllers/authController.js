@@ -53,3 +53,10 @@ export const loginUser = async (req, res) => {
     user,
   });
 };
+
+export const checkSession = async (req, res) => {
+  res.status(200).json({
+    user: req.user,
+  });
+};
+
