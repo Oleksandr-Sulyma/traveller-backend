@@ -1,8 +1,17 @@
-import { Joi, Segments } from "celebrate";
+import { Joi, Segments } from 'celebrate';
+import { paginationSchema } from './storyValidation.js';
 
 export const getAllUsersSchema = {
   [Segments.QUERY]: Joi.object({
-    page: Joi.number().integer().min(1).default(1),
-    perPage: Joi.number().integer().min(1).max(50).default(10),
+    ...paginationSchema,
+  }),
+};
+
+export const getUserStoriesSchema = {
+  [Segments.QUERY]: Joi.object({
+    ...paginationSchema,
+  }),
+  [Segments.PARAMS]: Joi.object({
+    id: Joi.string().hex().length(24).required(),
   }),
 };
