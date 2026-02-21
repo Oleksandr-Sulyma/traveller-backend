@@ -50,7 +50,7 @@ export async function saveFileToCloudinary(buffer, folder) {
       (err, result) => {
         if (err) return reject(err);
         resolve(result);
-      }
+      },
     );
 
     Readable.from(buffer).pipe(uploadStream);

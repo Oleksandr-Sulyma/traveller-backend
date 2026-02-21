@@ -1,11 +1,11 @@
-import { Joi, Segments } from "celebrate";
+import { Joi, Segments } from 'celebrate';
 
 const paginationSchema = {
   page: Joi.number().integer().min(1).default(1),
   perPage: Joi.number().integer().min(1).max(50).default(10),
 };
 
- export const createStorySchema = {
+export const createStorySchema = {
   [Segments.BODY]: Joi.object({
     title: Joi.string().max(80).required(),
     article: Joi.string().max(2500).required(),
@@ -13,19 +13,19 @@ const paginationSchema = {
   }),
 };
 
- export const getMyStoriesSchema = {
+export const getMyStoriesSchema = {
   [Segments.QUERY]: Joi.object({
     ...paginationSchema,
   }),
 };
 
- export const getSavedStoriesSchema = {
+export const getSavedStoriesSchema = {
   [Segments.QUERY]: Joi.object({
-   ...paginationSchema,
+    ...paginationSchema,
   }),
 };
 
- export const updateStorySchema = {
+export const updateStorySchema = {
   [Segments.PARAMS]: Joi.object({
     storyId: Joi.string().hex().length(24).required(),
   }),
@@ -33,9 +33,9 @@ const paginationSchema = {
     title: Joi.string().max(80),
     article: Joi.string().max(2500),
     category: Joi.string(),
- }), 
- };  
-    
+  }),
+};
+
 export const getStoryByIdSchema = {
   [Segments.PARAMS]: Joi.object({
     storyId: Joi.string().hex().length(24).required(),
