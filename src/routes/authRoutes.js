@@ -14,7 +14,6 @@ import {
   checkSession,
 } from "../controllers/authController.js";
 import { authenticate } from "../middleware/authenticate.js";
-import { checkSession } from "../controllers/authController.js";
 
 const router = Router();
 
