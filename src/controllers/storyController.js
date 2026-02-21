@@ -1,9 +1,9 @@
-import createHttpError from 'http-errors';
-import { Story } from '../models/story.js';
-import { User } from '../models/user.js';
-import { Category } from '../models/category.js';
-import { saveFileToCloudinary } from '../utils/saveFileToCloudinary.js';
-
+import createHttpError from "http-errors";
+import { Story } from "../models/story.js";
+import { User } from "../models/user.js";
+import { Category } from "../models/category.js";
+import { saveFileToCloudinary } from "../utils/saveFileToCloudinary.js";
+import { uploadFileOrThrowError } from "../utils/uploadFileOrThrowError.js";
 export const getAllStories = async (req, res) => {
   const { page = 1, perPage = 10, category } = req.query;
   const skip = (page - 1) * perPage;
@@ -188,25 +188,16 @@ export const createStory = async (req, res) => {
   }
 };
 
+
 export const updateStory = async (req, res) => {
   const { storyId } = req.params;
   const { title, article, category } = req.body;
 
   const imgBuffer = req.file ? req.file.buffer : null;
 
-  let uploadedImgUrl = null;
-  if (imgBuffer) {
-    try {
-      const uploadedImg = await saveFileToCloudinary(imgBuffer);
-      if (!uploadedImg || !uploadedImg.secure_url) {
-        throw createHttpError(500, 'Failed to upload image');
-      }
-      uploadedImgUrl = uploadedImg.secure_url;
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      throw createHttpError(500, 'Failed to upload image');
-    }
-  }
+  const uploadedImgUrl = await uploadFileOrThrowError(imgBuffer)
+
+
 
   let story;
   try {
