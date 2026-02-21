@@ -12,10 +12,7 @@ import {
     updateStory
 } from "../controllers/storyController.js";
 import * as schemas from "../validations/storyValidation.js";
-
 import { upload } from "../middleware/multer.js";
-import { createStory, updateStory } from "../controllers/storyController.js";
-
 
 const router = Router();
 

@@ -15,15 +15,13 @@ const paginationSchema = {
 
  export const getMyStoriesSchema = {
   [Segments.QUERY]: Joi.object({
-    page: Joi.number().integer().min(1).default(1),
-    perPage: Joi.number().integer().min(1).max(50).default(10),
+    ...paginationSchema,
   }),
 };
 
  export const getSavedStoriesSchema = {
   [Segments.QUERY]: Joi.object({
-    page: Joi.number().integer().min(1).default(1),
-    perPage: Joi.number().integer().min(1).max(50).default(10),
+   ...paginationSchema,
   }),
 };
 
@@ -35,6 +33,9 @@ const paginationSchema = {
     title: Joi.string().max(80),
     article: Joi.string().max(2500),
     category: Joi.string(),
+ }), 
+ };  
+    
 export const getStoryByIdSchema = {
   [Segments.PARAMS]: Joi.object({
     storyId: Joi.string().hex().length(24).required(),
@@ -43,8 +44,7 @@ export const getStoryByIdSchema = {
 
 export const getAllStoriesSchema = {
   [Segments.QUERY]: Joi.object({
-    page: Joi.number().integer().min(1).default(1),
-    perPage: Joi.number().integer().min(5).max(20).default(10),
+    ...paginationSchema,
     category: Joi.string().hex().length(24).optional(),
   }),
 };

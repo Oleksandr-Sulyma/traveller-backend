@@ -4,7 +4,6 @@ import { User } from "../models/user.js";
 import { Category } from "../models/category.js";
 import { saveFileToCloudinary } from "../utils/saveFileToCloudinary.js";
 
-// 1. Отримання всіх історій (Публічний)
 export const getAllStories = async (req, res) => {
   const { page = 1, perPage = 10, category } = req.query;
   const skip = (page - 1) * perPage;
@@ -37,7 +36,6 @@ export const getAllStories = async (req, res) => {
   });
 };
 
-// 2. Отримання однієї історії за ID (Публічний)
 export const getStoryById = async (req, res) => {
   const { storyId } = req.params;
 
@@ -52,9 +50,9 @@ export const getStoryById = async (req, res) => {
   res.status(200).json(story);
 };
 
-// 3. Отримання власних історій (Приватний)
 export const getMyStories = async (req, res) => {
   const { page = 1, perPage = 10 } = req.query;
+
   const userId = req.user._id;
   const skip = (page - 1) * perPage;
 
@@ -78,7 +76,6 @@ export const getMyStories = async (req, res) => {
   });
 };
 
-// 4. Додавання до збережених (Приватний)
 export const addToSave = async (req, res) => {
   const { storyId } = req.params;
   const userId = req.user._id;
@@ -97,7 +94,6 @@ export const addToSave = async (req, res) => {
   res.status(200).json(user.savedStories);
 };
 
-// 5. Видалення зі збережених (Приватний)
 export const removeFromSave = async (req, res) => {
   const { storyId } = req.params;
   const userId = req.user._id;
@@ -111,7 +107,6 @@ export const removeFromSave = async (req, res) => {
   res.status(200).json(user.savedStories);
 };
 
-// 6. Отримання збережених історій (Приватний)
 export const getSavedStories = async (req, res) => {
   const userId = req.user._id;
 
@@ -246,4 +241,4 @@ export const updateStory = async (req, res) => {
     console.error("Error updating story:", error);
     throw createHttpError(500, "Failed to update story");
   }
-};
+
