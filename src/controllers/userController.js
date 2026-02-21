@@ -1,6 +1,6 @@
 import createHttpError from "http-errors";
 import { User } from "../models/user.js";
-import { Story } from "../models/story.js";
+import { uploadFileOrThrowError } from '../utils/uploadFileOrThrowError.js';
 
 // - getAllUsers (ПУБЛІЧНИЙ)
 
@@ -49,3 +49,44 @@ export const getCurrentUser = async (req, res, next) => {
 };
 // - updateUserAvatar (ПРИВАТНИЙ)
 // - updateUserInfo (ПРИВАТНИЙ)
+export const updateUserAvatar = async (req, res) => {
+  if (!req.file) {
+    throw createHttpError(400, 'No file');
+  }
+
+ const uploadedImgUrl = await uploadFileOrThrowError(req.file.buffer)
+
+  try {
+  const user = await User.findByIdAndUpdate(
+    req.user._id,
+    { avatarUrl: uploadedImgUrl },
+    { new: true },
+  );
+
+  res.status(200).json( { avatarUrl: user.avatarUrl } );
+} catch (error) {
+  console.error('Error updating avatar:', error);
+createHttpError(500, 'Failed to update avatar');
+}
+};
+
+
+
+export const updateUserInfo = async (req, res) => {
+  const { name, description } = req.body || {};
+    try {
+  const user = await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      ...(name ? { name: name.trim() } : {}),
+      ...(description ? { description: description.trim() } : {}),
+     },
+    { new: true },
+  );
+
+  res.status(200).json( { name: user.name, avatarUrl: user.avatarUrl, description: user.description, id: user._id  } );
+} catch (error) {
+  console.error('Error updating profile:', error);
+createHttpError(500, 'Failed to update profile');
+}
+};
