@@ -1,10 +1,10 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/authenticate.js';
 
-// import {getAllUsers, getCurrentUser, getUserById, updateUserAvatar, updateUserInfo} from "../controllers/userController.js";
+// getUserById
 import { getAllUsersSchema } from "../validations/userValidation.js";
 import { celebrate } from "celebrate";
-import { updateUserAvatar, updateUserInfo } from "../controllers/userController.js";
+import { updateUserAvatar, updateUserInfo, getAllUsers, getCurrentUser } from "../controllers/userController.js";
 import { upload } from "../middleware/multer.js";
 import { updateUserSchema } from "../validations/userValidation.js";
 
