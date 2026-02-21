@@ -123,3 +123,17 @@ export const requestResetEmail = async (req, res, next) => {
     throw createHttpError(500, err.message);
   }
 };
+
+export const logoutUser = async (req, res) => {
+  const { sessionId } = req.cookies;
+
+  if (sessionId) {
+    await Session.deleteOne({ sessionId });
+  }
+
+  res.clearCookie("sessionId");
+  res.clearCookie("accessToken");
+  res.clearCookie("refreshToken");
+
+  res.status(204).send();
+};
