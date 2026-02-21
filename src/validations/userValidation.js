@@ -15,3 +15,10 @@ export const getUserStoriesSchema = {
     id: Joi.string().hex().length(24).required(),
   }),
 };
+
+export const updateUserSchema = {
+  [Segments.BODY]: Joi.object({
+    name: Joi.string().max(32),
+    description: Joi.string().max(150),
+ }),
+ };
