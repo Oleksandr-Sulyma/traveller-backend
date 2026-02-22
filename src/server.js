@@ -20,7 +20,11 @@ const PORT = process.env.PORT ?? 5000;
 
 app.use(logger);
 app.use(express.json({ limit: '5mb' }));
-app.use(cors({ methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'] }));
+app.use(cors({
+  methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+  origin: process.env.FRONTEND_DOMAIN,
+  credentials: true
+ }));
 app.use(helmet());
 app.use(cookieParser());
 
