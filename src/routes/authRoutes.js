@@ -11,6 +11,7 @@ import {
   refreshUserSession,
   requestResetEmail,
   logoutUser,
+  resetPassword,
   checkSession,
 } from "../controllers/authController.js";
 import { authenticate } from "../middleware/authenticate.js";
@@ -27,8 +28,7 @@ router.post(
 );
 router.post("/auth/logout", authenticate, logoutUser);
 
-// Потрібно буде додати пізніше:
-// router.post("/auth/reset-password", celebrate(resetPasswordSchema), resetPassword);
+router.post("/auth/reset-password", celebrate(resetPasswordSchema), resetPassword);
 
 router.get("/auth/check", checkSession);
 
