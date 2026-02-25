@@ -12,6 +12,7 @@ import { errorHandler } from './middleware/errorHandler.js';
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import storyRoutes from './routes/storyRoutes.js';
+import categoryRoutes from './routes/categoryRoutes.js';
 
 import cookieParser from 'cookie-parser';
 
@@ -28,9 +29,11 @@ app.use(cors({
 app.use(helmet());
 app.use(cookieParser());
 
+app.use(categoryRoutes);
 app.use(authRoutes);
 app.use(userRoutes);
 app.use(storyRoutes);
+
 
 app.use(notFoundHandler);
 

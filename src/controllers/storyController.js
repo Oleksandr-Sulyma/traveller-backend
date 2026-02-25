@@ -150,9 +150,7 @@ export const createStory = async (req, res) => {
     throw createHttpError(400, 'Image file is required');
   }
 
-  const categoryEnity = await Category.findOne({
-    name: category,
-  });
+  const categoryEnity = await Category.findById(category);
 
   if (!categoryEnity) {
     throw createHttpError(400, 'Invalid category ID');
@@ -171,6 +169,7 @@ export const createStory = async (req, res) => {
       category: categoryEnity._id,
       img: uploadedImg.secure_url,
       ownerId: req.user._id,
+      date: new Date().toISOString(),
     });
 
     res.status(201).json({
@@ -214,7 +213,7 @@ if (imgBuffer) {
   }
 
   if (category) {
-    const categoryEntity = await Category.findOne({ name: category });
+    const categoryEntity = await Category.findById(category);
 
     if (!categoryEntity) {
       throw createHttpError(400, 'Invalid category');
