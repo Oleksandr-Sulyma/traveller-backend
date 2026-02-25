@@ -5,6 +5,7 @@ import { Session } from '../models/session.js';
 import { User } from '../models/user.js';
 
 export const authenticate = async (req, res, next) => {
+  console.log('Authenticating user...');
   // 1. Перевіряємо наявність accessToken
   if (!req.cookies.accessToken) {
     throw createHttpError(401, 'Missing access token');

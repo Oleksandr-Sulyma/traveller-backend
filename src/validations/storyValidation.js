@@ -9,7 +9,7 @@ export const createStorySchema = {
   [Segments.BODY]: Joi.object({
     title: Joi.string().max(80).required(),
     article: Joi.string().max(2500).required(),
-    category: Joi.string().required(),
+    category: Joi.string().hex().required(),
   }),
 };
 
@@ -32,7 +32,7 @@ export const updateStorySchema = {
   [Segments.BODY]: Joi.object({
     title: Joi.string().max(80),
     article: Joi.string().max(2500),
-    category: Joi.string(),
+    category: Joi.string().hex(),
   }),
 };
 
