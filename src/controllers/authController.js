@@ -4,13 +4,14 @@ import jwt from "jsonwebtoken";
 import handlebars from "handlebars";
 import path from "node:path";
 import fs from "node:fs/promises";
+import { refreshSessionLogic } from "../services/sessionService.js";
 
 import { User } from "../models/user.js";
 import { Session } from "../models/session.js";
 import { createSession, setSessionCookies } from "../services/auth.js";
 import { sendEmail } from "../utils/sendMail.js";
 
-export const registerUser = async (req, res, next) => {
+export const registerUser = async (req, res) => {
   const { email, password, name } = req.body;
   const existingUser = await User.findOne({ email });
 
@@ -34,7 +35,7 @@ export const registerUser = async (req, res, next) => {
   res.status(201).json(userResponse);
 };
 
-export const loginUser = async (req, res, next) => {
+export const loginUser = async (req, res) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email });
 
@@ -42,7 +43,6 @@ export const loginUser = async (req, res, next) => {
     throw createHttpError(401, "Invalid credentials");
   }
 
-  // Видаляємо стару сесію користувача перед створенням нової
   await Session.deleteOne({ userId: user._id });
 
   const newSession = await createSession(user._id);
@@ -54,34 +54,18 @@ export const loginUser = async (req, res, next) => {
   res.status(200).json(userResponse);
 };
 
-export const refreshUserSession = async (req, res, next) => {
-  const session = await Session.findOne({
-    _id: req.cookies.sessionId,
-    refreshToken: req.cookies.refreshToken,
-  });
+export const refreshUserSession = async (req, res) => {
+  const newSession = await refreshSessionLogic(
+    req.cookies.sessionId,
+    req.cookies.refreshToken
+  );
 
-  if (!session) {
-    throw createHttpError(401, "Session not found");
-  }
-
-  if (new Date() > new Date(session.refreshTokenValidUntil)) {
-    throw createHttpError(401, "Session token expired");
-  }
-
-  await Session.deleteOne({
-    _id: req.cookies.sessionId,
-    refreshToken: req.cookies.refreshToken,
-  });
-
-  const newSession = await createSession(session.userId);
   setSessionCookies(res, newSession);
 
-  res.status(200).json({
-    message: "Session refreshed",
-  });
+  res.status(200).json({ message: "Session refreshed" });
 };
 
-export const requestResetEmail = async (req, res, next) => {
+export const requestResetEmail = async (req, res) => {
   const { email } = req.body;
   const user = await User.findOne({ email });
 
@@ -114,7 +98,7 @@ export const requestResetEmail = async (req, res, next) => {
       html,
     });
   } catch (error) {
-    return next(createHttpError(500, "Failed to send the email."));
+    throw createHttpError(500, "Failed to send the email.");
   }
 
   res.status(200).json({
@@ -122,14 +106,14 @@ export const requestResetEmail = async (req, res, next) => {
   });
 };
 
-export const resetPassword = async (req, res, next) => {
+export const resetPassword = async (req, res) => {
   const { token, password } = req.body;
   let payload;
 
   try {
     payload = jwt.verify(token, process.env.JWT_SECRET);
   } catch {
-    return next(createHttpError(401, "Invalid or expired token"));
+    throw createHttpError(401, "Invalid or expired token");
   }
 
   const user = await User.findOne({ _id: payload.sub, email: payload.email });
@@ -149,43 +133,40 @@ export const resetPassword = async (req, res, next) => {
   res.status(200).json({ message: "Password reset successfully" });
 };
 
-export const checkSession = async (req, res, next) => {
-  try {
-    const { sessionId, accessToken, refreshToken } = req.cookies;
+export const checkSession = async (req, res) => {
+  const { sessionId, accessToken, refreshToken } = req.cookies;
 
-    if (!sessionId || !accessToken) {
-      throw createHttpError(401, "No active session");
-    }
-
-    const session = await Session.findOne({ _id: sessionId, accessToken });
-
-    if (!session) {
-      throw createHttpError(401, "Invalid session");
-    }
-
-    const now = new Date();
-
-    if (now > new Date(session.accessTokenValidUntil)) {
-      if (
-        refreshToken &&
-        refreshToken === session.refreshToken &&
-        now < new Date(session.refreshTokenValidUntil)
-      ) {
-        return refreshUserSession(req, res);
-      } else {
-        throw createHttpError(401, "Session expired");
-      }
-    }
-
-    res.status(200).json({ success: true, session: session._id });
-  } catch (error) {
-    return next(
-    createHttpError(
-      error.status || error.statusCode || 500,
-      error.message,
-      )
-    );
+  if (!sessionId || !accessToken) {
+    throw createHttpError(401, "No active session");
   }
+
+  const session = await Session.findOne({ _id: sessionId, accessToken });
+
+  if (!session) {
+    throw createHttpError(401, "Invalid session");
+  }
+
+  const now = new Date();
+
+  if (now > new Date(session.accessTokenValidUntil)) {
+    if (
+      refreshToken &&
+      refreshToken === session.refreshToken &&
+      now < new Date(session.refreshTokenValidUntil)
+    ) {
+      const newSession = await refreshSessionLogic(sessionId, refreshToken);
+
+    setSessionCookies(res, newSession);
+
+    return res.status(200).json({
+      message: "Session refreshed",
+    });
+    } else {
+      throw createHttpError(401, "Session expired");
+    }
+  }
+
+  res.status(200).json({ success: true, session: session._id });
 };
 
 export const logoutUser = async (req, res) => {

@@ -10,31 +10,14 @@ const fileFilter = (req, file, cb) => {
   cb(null, true);
 };
 
-export const upload = multer({
+
+const createUploader = (sizeLimit) => multer({
   storage,
   limits: {
-    fileSize: 5 * 1024 * 1024,
-},
+    fileSize: sizeLimit,
+  },
   fileFilter,
 });
 
-//використання в проекті:
-// 1. Оновлення аватара (поле avatar)
-// JavaScript
-// // routes/userRouter.js
-// userRouter.patch(
-//   '/avatar',
-//   authenticate,
-//   upload.single('avatar'), // Очікуємо файл у полі 'avatar'
-//   userController.updateAvatar
-// );
-// 2. Створення історії (поле img)
-// JavaScript
-// // routes/storiesRouter.js
-// storiesRouter.post(
-//   '/',
-//   authenticate,
-//   upload.single('img'), // Очікуємо файл у полі 'img' (згідно з вашим JSON)
-//   validateBody(storySchema),
-//   storiesController.createStory
-// );
+export const uploadStoryImg = createUploader(2 * 1024 * 1024); // 2MB для історій
+export const uploadAvatar = createUploader(500 * 1024);       // 500KB для аватарок
