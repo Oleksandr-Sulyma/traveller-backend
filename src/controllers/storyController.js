@@ -8,12 +8,21 @@ import dayjs from "dayjs";
 
 
 export const getAllStories = async (req, res) => {
-  const { page = 1, perPage = 10, category } = req.query;
+  const {
+    page = 1,
+    perPage = 10,
+    category,
+    author, // новий параметр для фільтрації за автором
+    sortBy = "createdAt",
+    sortOrder = "desc",
+  } = req.query;
+
   const skip = (page - 1) * perPage;
 
-  const storiesQuery = Story.find();
+  let storiesQuery = Story.find();
 
-  if (category) storiesQuery.where("category").equals(category);
+  if (category) storiesQuery = storiesQuery.where("category").equals(category);
+  if (author) storiesQuery = storiesQuery.where("ownerId").equals(author);
 
   const [total, stories] = await Promise.all([
     storiesQuery.clone().countDocuments(),
@@ -21,7 +30,7 @@ export const getAllStories = async (req, res) => {
       .clone()
       .skip(skip)
       .limit(Number(perPage))
-      .sort({ createdAt: -1 })
+      .sort({ [sortBy]: sortOrder === "asc" ? 1 : -1 })
       .populate("category", "name")
       .populate("ownerId", "name avatarUrl"),
   ]);
@@ -39,7 +48,6 @@ export const getAllStories = async (req, res) => {
     stories: formattedStories,
   });
 };
-
 
 export const getStoryById = async (req, res) => {
   const { storyId } = req.params;

@@ -32,8 +32,7 @@ const router = Router();
  *   post:
  *     summary: Register a new user
  *     description: Creates a new account and automatically sets session cookies.
- *     tags:
- *       - Auth
+ *     tags: [Auth]
  *     requestBody:
  *       required: true
  *       content:
@@ -45,12 +44,17 @@ const router = Router();
  *         description: User successfully registered
  *         content:
  *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/User'
- *       400:
- *         description: Validation error (e.g. invalid email format)
+ *             example:
+ *               _id: "64f0c8a1e3b1a123456789ab"
+ *               name: "John Doe"
+ *               email: "john@example.com"
+ *               avatarUrl: "https://example.com/avatar.jpg"
  *       409:
  *         description: Email already in use
+ *       400:
+ *         description: Validation error (invalid email/password)
+ *       500:
+ *         description: Internal server error
  */
 router.post("/register", celebrate(registerUserSchema), registerUser);
 
@@ -59,8 +63,7 @@ router.post("/register", celebrate(registerUserSchema), registerUser);
  * /auth/login:
  *   post:
  *     summary: Log in to the system
- *     tags:
- *       - Auth
+ *     tags: [Auth]
  *     requestBody:
  *       required: true
  *       content:
@@ -72,8 +75,18 @@ router.post("/register", celebrate(registerUserSchema), registerUser);
  *         description: Successful login
  *         content:
  *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/User'
+ *             example:
+ *               _id: "64f0c8a1e3b1a123456789ab"
+ *               name: "John Doe"
+ *               email: "john@example.com"
+ *               avatarUrl: "https://example.com/avatar.jpg"
+ *               accessToken: "jwtAccessTokenHere"
+ *       401:
+ *         description: Invalid credentials
+ *       400:
+ *         description: Validation error
+ *       500:
+ *         description: Internal server error
  */
 router.post("/login", celebrate(loginUserSchema), loginUser);
 
@@ -86,10 +99,14 @@ router.post("/login", celebrate(loginUserSchema), loginUser);
  *     responses:
  *       200:
  *         description: Session refreshed successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               accessToken: "newJwtAccessTokenHere"
  *       401:
- *         description: Unauthorized
+ *         description: Unauthorized / Refresh token invalid
  *       500:
- *         description: Server error
+ *         description: Internal server error
  */
 router.post("/refresh", refreshUserSession);
 
@@ -102,12 +119,12 @@ router.post("/refresh", refreshUserSession);
  *     security:
  *       - cookieAuth: []
  *     responses:
- *       200:
+ *       204:
  *         description: Successfully logged out
  *       401:
- *         description: Unauthorized
+ *         description: No active session
  *       500:
- *         description: Server error
+ *         description: Internal server error
  */
 router.post("/logout", authenticate, logoutUser);
 
@@ -121,11 +138,18 @@ router.post("/logout", authenticate, logoutUser);
  *       - cookieAuth: []
  *     responses:
  *       200:
- *         description: User session is valid
+ *         description: Session is valid
+ *         content:
+ *           application/json:
+ *             example:
+ *               _id: "64f0c8a1e3b1a123456789ab"
+ *               name: "John Doe"
+ *               email: "john@example.com"
+ *               avatarUrl: "https://example.com/avatar.jpg"
  *       401:
- *         description: Unauthorized
+ *         description: No active session / Invalid session / Session expired
  *       500:
- *         description: Server error
+ *         description: Internal server error
  */
 router.get("/check", authenticate, checkSession);
 
@@ -149,11 +173,15 @@ router.get("/check", authenticate, checkSession);
  *                 example: "john@example.com"
  *     responses:
  *       200:
- *         description: Reset email sent
+ *         description: Password reset email sent successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Password reset email sent"
  *       400:
  *         description: Validation error
  *       500:
- *         description: Server error
+ *         description: Failed to send the email
  */
 router.post("/request-reset-email", celebrate(requestResetEmailSchema), requestResetEmail);
 
@@ -181,11 +209,19 @@ router.post("/request-reset-email", celebrate(requestResetEmailSchema), requestR
  *                 example: "newSecurePassword123"
  *     responses:
  *       200:
- *         description: Password successfully reset
+ *         description: Password reset successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Password has been reset"
+ *       401:
+ *         description: Invalid or expired token
+ *       404:
+ *         description: User not found
  *       400:
- *         description: Validation error or invalid token
+ *         description: Validation error
  *       500:
- *         description: Server error
+ *         description: Internal server error
  */
 router.post("/reset-password", celebrate(resetPasswordSchema), resetPassword);
 

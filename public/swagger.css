@@ -1,0 +1,117 @@
+.swagger-ui .topbar {
+  display: none;
+}
+
+.swagger-ui {
+  background-color: #ffffff; /* світлий фон */
+  color: #111827; /* темний текст */
+}
+
+.swagger-ui .info hgroup.main h1,
+.swagger-ui .info hgroup.main h2,
+.swagger-ui .info hgroup.main .version,
+.swagger-ui .info .description,
+.swagger-ui .info .base-url {
+  color: #111827 !important;
+}
+
+.swagger-ui .info .description p {
+  color: #374151 !important;
+}
+
+.swagger-ui .info .info-title,
+.swagger-ui .info .info-version {
+  color: #3b82f6 !important;
+}
+
+.swagger-ui .info hgroup.main h2 {
+  font-size: 34px;
+}
+
+.swagger-ui .opblock {
+  background: #f9fafb; /* світлий блок */
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+}
+
+.swagger-ui .opblock-summary {
+  color: #111827;
+}
+
+.swagger-ui .opblock .opblock-summary-path,
+.swagger-ui .opblock .opblock-summary-method,
+.swagger-ui .opblock .opblock-summary-description {
+  color: #111827 !important;
+}
+
+.swagger-ui .opblock .opblock-summary-description *,
+.swagger-ui .opblock .opblock-body *,
+.swagger-ui .parameters-col_description *,
+.swagger-ui .parameters-col_name * {
+  color: #111827 !important;
+}
+
+.swagger-ui .parameters-col_name,
+.swagger-ui .parameters-col_description {
+  color: #111827 !important;
+}
+
+.swagger-ui .parameters-col_description p,
+.swagger-ui .parameters-col_name p {
+  color: #111827 !important;
+}
+
+.swagger-ui .opblock-description-wrapper,
+.swagger-ui .opblock-description-wrapper *,
+.swagger-ui .opblock-description {
+  color: #111827 !important;
+}
+
+.swagger-ui .responses-wrapper {
+  background: #ffffff;
+}
+
+.swagger-ui .responses-wrapper .response-col_status,
+.swagger-ui .responses-wrapper .response-col_description,
+.swagger-ui .responses-wrapper .response-col_links {
+  color: #111827 !important;
+}
+
+.swagger-ui .responses-wrapper .response {
+  background-color: #f3f4f6 !important;
+}
+
+.swagger-ui .responses-wrapper .response-col_links {
+  color: #3b82f6 !important;
+}
+
+.swagger-ui pre,
+.swagger-ui code {
+  background-color: #f3f4f6 !important;
+  color: #111827 !important;
+}
+
+.swagger-ui a {
+  color: #3b82f6 !important;
+}
+
+.swagger-ui .btn.authorize {
+  background-color: #3b82f6 !important;
+  border-color: #3b82f6 !important;
+  color: #ffffff !important;
+}
+
+.swagger-ui .btn.try-out__btn {
+  background-color: #2563eb !important;
+  color: white !important;
+}
+
+.swagger-ui .servers-title,
+.swagger-ui .servers li,
+.swagger-ui .servers p {
+  background-color: #f3f4f6 !important;
+  color: #111827 !important;
+  border-radius: 8px;
+  padding: 8px;
+  margin-bottom: 4px;
+}
