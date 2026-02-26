@@ -1,6 +1,9 @@
-import { Router } from 'express';
-import { celebrate } from 'celebrate';
-import { authenticate } from '../middleware/authenticate.js';
+// storyRouter.js
+import { Router } from "express";
+import { celebrate } from "celebrate";
+import { authenticate } from "../middleware/authenticate.js";
+import { uploadStoryImg } from "../middleware/multer.js";
+import * as schemas from "../validations/storyValidation.js";
 import {
   getAllStories,
   getStoryById,

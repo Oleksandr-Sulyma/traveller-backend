@@ -1,3 +1,4 @@
+// categoryRouter.js
 import { Router } from "express";
 import { getAllCategories } from "../controllers/categoryController.js";
 
