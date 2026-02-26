@@ -10,6 +10,7 @@ import cookieParser from 'cookie-parser';
 import { connectMongoDB } from './db/connectMongoDB.js';
 import { logger } from './middleware/logger.js';
 import { notFoundHandler } from './middleware/notFoundHandler.js';
+import { errorHandler } from './middleware/errorHandler.js';
 
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
@@ -17,19 +18,51 @@ import storyRoutes from './routes/storyRoutes.js';
 import categoryRoutes from './routes/categoryRoutes.js';
 import { swaggerOptions } from './utils/swagger.js';
 
+const swaggerSpec = swaggerJsdoc(swaggerOptions);
+
 const app = express();
 const PORT = process.env.PORT ?? 5000;
 
-const specs = swaggerJsdoc(swaggerOptions);
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
+app.use(
+  '/api-docs',
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec, {
+    customSiteTitle: 'Travellers API Docs',
+    customCss: `
+      .swagger-ui .topbar { display: none }
+      .swagger-ui .info hgroup.main h2 {
+        color: #0f766e;
+      }
+      .swagger-ui .btn.authorize {
+        background-color: #0f766e;
+        border-color: #0f766e;
+      }
+    `,
+    customfavIcon: '/favicon.ico',
+  })
+);
 
 app.use(logger);
 app.use(helmet());
+
+const allowedOrigins = [
+  process.env.FRONTEND_DOMAIN,
+  'http://localhost:3000',
+  'http://localhost:5173'
+];
+
 app.use(cors({
   methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
-  origin: process.env.FRONTEND_DOMAIN,
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
+
 app.use(express.json({ limit: '5mb' }));
 app.use(cookieParser());
 
@@ -38,35 +71,21 @@ app.use('/users', userRoutes);
 app.use('/stories', storyRoutes);
 app.use('/categories', categoryRoutes);
 
-
 app.use(notFoundHandler);
 app.use(errors());
+app.use(errorHandler);
 
-app.use((err, req, res, next) => {
-  // Multer size limits
-  if (err.code === 'LIMIT_FILE_SIZE') {
-    const limit = req.url.includes('avatar') ? '500KB' : '2MB';
-    return res.status(400).json({
-      status: 400,
-      message: `Файл занадто великий. Максимальний розмір для цього поля: ${limit}`,
-    });
-  }
-
-  const status = err.status || err.statusCode || 500;
-  res.status(status).json({
-    status,
-    message: err.message || 'Internal Server Error',
-  });
-});
-
-const start = async () => {
+const startServer = async () => {
   try {
     await connectMongoDB();
-    app.listen(PORT, () => console.log(`🚀 Server ready on port ${PORT}`));
-  } catch (e) {
-    console.error(e);
+    app.listen(PORT, () => {
+      console.log(`🚀 Server ready on port ${PORT}`);
+      console.log(`📖 Swagger: https://traveller-backend-lia1.onrender.com/api-docs`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
     process.exit(1);
   }
 };
 
-start();
+startServer();

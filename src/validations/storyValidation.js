@@ -6,10 +6,10 @@ export const paginationSchema = {
   perPage: Joi.number().integer().min(1).max(50).default(10),
 };
 
-const validateCategory = async (CSSMathValue, helpers) =>{
+const validateCategory = async (value, helpers) => {
   const categoryExists = await Category.findById(value);
   if (!categoryExists) {
-    throw new Error('Category not found');
+    return helpers.error('any.custom', { message: 'Category not found' });
   }
   return value;
 };
