@@ -1,38 +1,37 @@
 import { Router } from 'express';
+import { celebrate } from 'celebrate';
 import { authenticate } from '../middleware/authenticate.js';
-
+import { uploadAvatar } from '../middleware/multer.js';
 import {
   getAllUsers,
   getCurrentUser,
   getUserById,
   updateUserAvatar,
-updateUserInfo,
+  updateUserInfo,
 } from '../controllers/userController.js';
 import {
   getAllUsersSchema,
   getUserStoriesSchema,
   updateUserSchema,
 } from '../validations/userValidation.js';
-import { celebrate } from 'celebrate';
-// getUserById
-
-import { upload } from "../middleware/multer.js";
 
 const router = Router();
 
-// 1. ПУБЛІЧНИЙ: Отримання всіх авторів + пагінація
-router.get('/users', celebrate(getAllUsersSchema), getAllUsers);
+/**
+ * @swagger
+ * tags:
+ *   - name: Users
+ * description: Керування користувачами (префікс /users)
+ */
 
-// 2. ПРИВАТНИЙ: Інформація про поточного користувача
-router.get('/users/me', authenticate, getCurrentUser);
+router.get('/', celebrate(getAllUsersSchema), getAllUsers);
 
-// 3. ПУБЛІЧНИЙ: Отримання даних про користувача за ID + його статті
-router.get('/users/:id', celebrate(getUserStoriesSchema), getUserById);
+router.get('/me', authenticate, getCurrentUser);
 
-// 4. ПРИВАТНИЙ: Оновлення аватару
-router.patch('/users/me/avatar', authenticate, upload.single('avatar'), updateUserAvatar);
+router.get('/:id', celebrate(getUserStoriesSchema), getUserById);
 
-// 5. ПРИВАТНИЙ: Оновлення даних (ім'я, опис тощо)
-router.patch('/users/me/profile', authenticate, celebrate(updateUserSchema), updateUserInfo);
+router.patch('/me/avatar', authenticate, uploadAvatar.single('avatar'), updateUserAvatar);
+
+router.patch('/me/profile', authenticate, celebrate(updateUserSchema), updateUserInfo);
 
 export default router;

@@ -19,18 +19,39 @@ import { authenticate } from "../middleware/authenticate.js";
 
 const router = Router();
 
-router.post("/auth/register", celebrate(registerUserSchema), registerUser);
-router.post("/auth/login", celebrate(loginUserSchema), loginUser);
-router.post("/auth/refresh", refreshUserSession);
-router.post(
-  "/auth/request-reset-email",
-  celebrate(requestResetEmailSchema),
-  requestResetEmail,
-);
-router.post("/auth/logout", authenticate, logoutUser);
+/**
+ * @swagger
+ * tags:
+ *   - name: Auth
+ * description: Керування авторизацією та сесіями
+ */
 
-router.post("/auth/reset-password", celebrate(resetPasswordSchema), resetPassword);
+/**
+ * @swagger
+ * /auth/register:
+ * post:
+ * summary: Реєстрація нового користувача
+ * tags: [Auth]
+ */
+router.post("/register", celebrate(registerUserSchema), registerUser);
 
-router.get("/auth/check", checkSession);
+/**
+ * @swagger
+ * /auth/login:
+ * post:
+ * summary: Вхід у систему
+ * tags: [Auth]
+ */
+router.post("/login", celebrate(loginUserSchema), loginUser);
+
+router.post("/refresh", refreshUserSession);
+
+router.post("/logout", authenticate, logoutUser);
+
+router.get("/check", authenticate, checkSession);
+
+router.post("/request-reset-email", celebrate(requestResetEmailSchema), requestResetEmail);
+
+router.post("/reset-password", celebrate(resetPasswordSchema), resetPassword);
 
 export default router;

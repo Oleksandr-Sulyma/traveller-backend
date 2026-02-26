@@ -4,7 +4,9 @@ import { User } from '../models/user.js';
 export const connectMongoDB = async () => {
   try {
     const mongoUrl = process.env.MONGO_URL;
-    await mongoose.connect(mongoUrl);
+    await mongoose.connect(mongoUrl, {
+  family: 4,
+});
     console.log('✅ MongoDB connection established successfully');
 
     await User.syncIndexes();

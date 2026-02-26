@@ -12,50 +12,44 @@ import {
   updateStory,
 } from '../controllers/storyController.js';
 import * as schemas from '../validations/storyValidation.js';
-import { upload } from '../middleware/multer.js';
+import { uploadStoryImg } from '../middleware/multer.js';
 
 const router = Router();
 
-// 1. ПУБЛІЧНИЙ: Отримання всіх історій (пагінація + фільтр)
-router.get('/stories', celebrate(schemas.getAllStoriesSchema), getAllStories);
+/**
+ * @swagger
+ * tags:
+ *   - name: Stories
+ * description: Керування історіями (префікс /stories)
+ */
 
-// 2. ПУБЛІЧНИЙ: Отримання однієї історії за ID
-router.get(
-  '/stories/:storyId',
-  celebrate(schemas.getStoryByIdSchema),
-  getStoryById,
-);
+router.get('/', celebrate(schemas.getAllStoriesSchema), getAllStories);
 
-// 3. ПРИВАТНИЙ: Отримання власних історій (OwnStories)
+router.get('/:storyId', celebrate(schemas.getStoryByIdSchema), getStoryById);
+
+// Захищені роути
 router.use(authenticate);
 
-router.get('/stories/own', celebrate(schemas.getMyStoriesSchema), getMyStories);
+router.get('/own', celebrate(schemas.getMyStoriesSchema), getMyStories);
 
-// 4. ПРИВАТНИЙ: Отримання збережених історій (SavedStories)
-router.get(
-  '/stories/saved',
-  celebrate(schemas.getSavedStoriesSchema),
-  getSavedStories,
-);
+router.get('/saved', celebrate(schemas.getSavedStoriesSchema), getSavedStories);
 
-// 5. ПРИВАТНИЙ: Створення історії (Приватний + завантаження фото + валідація body)
 router.post(
-  '/stories',
-  upload.single('img'),
+  '/',
+  uploadStoryImg.single('img'),
   celebrate(schemas.createStorySchema),
-  createStory,
+  createStory
 );
 
-// 6. ПРИВАТНИЙ: Редагування історії (Приватний + завантаження фото + валідація params/body)
 router.patch(
-  '/stories/:storyId',
-  upload.single('img'),
+  '/:storyId',
+  uploadStoryImg.single('img'),
   celebrate(schemas.updateStorySchema),
-  updateStory,
+  updateStory
 );
 
-// 7. ПРИВАТНИЙ: Додавання/Видалення зі збережених
-router.post('/stories/:storyId/save', addToSave);
-router.delete('/stories/:storyId/save', removeFromSave);
+router.post('/:storyId/save', addToSave);
+
+router.delete('/:storyId/save', removeFromSave);
 
 export default router;
