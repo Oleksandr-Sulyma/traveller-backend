@@ -8,10 +8,10 @@ export const refreshSessionLogic = async (sessionId, refreshToken) => {
     refreshToken,
   });
 
-  if (!session) throw createHttpError(401, "Session not found");
+  if (!session) throw createHttpError(401, 'Session not found');
 
   if (new Date() > new Date(session.refreshTokenValidUntil)) {
-    throw createHttpError(401, "Session expired");
+    throw createHttpError(401, 'Session expired');
   }
 
   await Session.deleteOne({ _id: sessionId });

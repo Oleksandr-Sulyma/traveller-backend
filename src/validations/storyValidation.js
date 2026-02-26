@@ -1,14 +1,18 @@
 import { Joi, Segments } from 'celebrate';
 import { Category } from '../models/category.js';
+<<<<<<< HEAD
 
 // Спільна схема для валідації MongoDB ID
 const objectIdSchema = Joi.string().hex().length(24);
+=======
+>>>>>>> 8b9aa3f (fix all routs)
 
 export const paginationSchema = {
   page: Joi.number().integer().min(1).default(1),
   perPage: Joi.number().integer().min(1).max(50).default(10),
 };
 
+<<<<<<< HEAD
 // Валідація для отримання всіх історій (фільтрація)
 
 export const getAllStoriesSchema = {
@@ -19,6 +23,38 @@ export const getAllStoriesSchema = {
     favorite: Joi.string().valid('true', 'false'),
     sortBy: Joi.string().valid('createdAt', 'title', 'favoriteCount').default('createdAt'),
     sortOrder: Joi.string().valid('asc', 'desc').default('desc'),
+=======
+const validateCategory = async (CSSMathValue, helpers) =>{
+  const categoryExists = await Category.findById(value);
+  if (!categoryExists) {
+    throw new Error('Category not found');
+  }
+  return value;
+};
+
+export const createStorySchema = {
+  [Segments.BODY]: Joi.object({
+    title: Joi.string().max(80).required(),
+    article: Joi.string().max(2500).required(),
+    category: Joi.string().hex().length(24).required().external(validateCategory),
+  }),
+};
+
+export const updateStorySchema = {
+  [Segments.PARAMS]: Joi.object({
+    storyId: Joi.string().hex().length(24).required(),
+  }),
+  [Segments.BODY]: Joi.object({
+    title: Joi.string().max(80),
+    article: Joi.string().max(2500),
+    category: Joi.string().hex().length(24).external(validateCategory),
+  }),
+};
+
+export const getStoryByIdSchema = {
+  [Segments.PARAMS]: Joi.object({
+    storyId: Joi.string().hex().length(24).required(),
+>>>>>>> 8b9aa3f (fix all routs)
   }),
 };
 
@@ -68,3 +104,13 @@ export const getSavedStoriesSchema = {
     ...paginationSchema,
   }),
 };
+<<<<<<< HEAD
+=======
+
+export const getAllStoriesSchema = {
+  [Segments.QUERY]: Joi.object({
+    ...paginationSchema,
+    category: Joi.string().hex().length(24).optional(),
+  }),
+};
+>>>>>>> 8b9aa3f (fix all routs)
