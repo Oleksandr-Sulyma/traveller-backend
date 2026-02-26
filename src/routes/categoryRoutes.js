@@ -7,15 +7,25 @@ const router = Router();
  * @swagger
  * tags:
  *   - name: Categories
- * description: Керування категоріями історій
+ *     description: Керування категоріями історій
  */
 
 /**
  * @swagger
  * /categories:
- * get:
- * summary: Отримання списку всіх категорій
- * tags: [Categories]
+ *   get:
+ *     summary: Отримання списку всіх категорій
+ *     tags:
+ *       - Categories
+ *     responses:
+ *       200:
+ *         description: Успішне отримання списку категорій
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Category'
  */
 router.get("/", getAllCategories);
 
