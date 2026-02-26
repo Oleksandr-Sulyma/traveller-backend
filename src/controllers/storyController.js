@@ -49,6 +49,7 @@ export const getAllStories = async (req, res) => {
   });
 };
 
+
 export const getStoryById = async (req, res) => {
   const { storyId } = req.params;
 

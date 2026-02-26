@@ -51,6 +51,25 @@ app.use(
 );
 
 
+app.use(
+  '/api-docs',
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec, {
+    customSiteTitle: 'Travellers API Docs',
+    customCss: `
+      .swagger-ui .topbar { display: none }
+      .swagger-ui .info hgroup.main h2 {
+        color: #0f766e;
+      }
+      .swagger-ui .btn.authorize {
+        background-color: #0f766e;
+        border-color: #0f766e;
+      }
+    `,
+    customfavIcon: '/favicon.ico',
+  })
+);
+
 app.use(logger);
 app.use(helmet());
 
