@@ -19,43 +19,50 @@ const router = Router();
 // 1. ПУБЛІЧНИЙ: Отримання всіх історій (пагінація + фільтр)
 router.get('/stories', celebrate(schemas.getAllStoriesSchema), getAllStories);
 
-// 2. ПУБЛІЧНИЙ: Отримання однієї історії за ID
+// 2. ПРИВАТНИЙ: Отримання власних історій (OwnStories)
+
 router.get(
-  '/stories/:storyId',
-  celebrate(schemas.getStoryByIdSchema),
-  getStoryById,
+  '/stories/own',
+  authenticate,
+  celebrate(schemas.getMyStoriesSchema),
+  getMyStories,
 );
 
-// 3. ПРИВАТНИЙ: Отримання власних історій (OwnStories)
-router.use(authenticate);
-
-router.get('/stories/own', celebrate(schemas.getMyStoriesSchema), getMyStories);
-
-// 4. ПРИВАТНИЙ: Отримання збережених історій (SavedStories)
+// 3. ПРИВАТНИЙ: Отримання збережених історій (SavedStories)
 router.get(
   '/stories/saved',
+  authenticate,
   celebrate(schemas.getSavedStoriesSchema),
   getSavedStories,
 );
 
-// 5. ПРИВАТНИЙ: Створення історії (Приватний + завантаження фото + валідація body)
+// 4. ПРИВАТНИЙ: Створення історії (Приватний + завантаження фото + валідація body)
 router.post(
   '/stories',
+  authenticate,
   upload.single('img'),
   celebrate(schemas.createStorySchema),
   createStory,
 );
 
-// 6. ПРИВАТНИЙ: Редагування історії (Приватний + завантаження фото + валідація params/body)
+// 5. ПРИВАТНИЙ: Редагування історії (Приватний + завантаження фото + валідація params/body)
 router.patch(
   '/stories/:storyId',
+  authenticate,
   upload.single('img'),
   celebrate(schemas.updateStorySchema),
   updateStory,
 );
 
-// 7. ПРИВАТНИЙ: Додавання/Видалення зі збережених
-router.post('/stories/:storyId/save', addToSave);
-router.delete('/stories/:storyId/save', removeFromSave);
+// 6. ПРИВАТНИЙ: Додавання/Видалення зі збережених
+router.post('/stories/:storyId/save', authenticate, addToSave);
+router.delete('/stories/:storyId/save', authenticate, removeFromSave);
+
+// 7. ПУБЛІЧНИЙ: Отримання однієї історії за ID
+router.get(
+  '/stories/:storyId',
+  celebrate(schemas.getStoryByIdSchema),
+  getStoryById,
+);
 
 export default router;
