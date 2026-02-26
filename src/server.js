@@ -6,6 +6,8 @@ import { errors } from 'celebrate';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsdoc from 'swagger-jsdoc';
 import cookieParser from 'cookie-parser';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 import { connectMongoDB } from './db/connectMongoDB.js';
 import { logger } from './middleware/logger.js';
@@ -22,6 +24,32 @@ const swaggerSpec = swaggerJsdoc(swaggerOptions);
 
 const app = express();
 const PORT = process.env.PORT ?? 5000;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+app.use('/public', express.static(path.join(__dirname, '../public')));
+
+app.get('/api-docs.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
+});
+
+app.use(
+  '/api-docs',
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec, {
+    customCssUrl: '/public/swagger.css',
+    customSiteTitle: 'Travellers API',
+    explorer: true,
+    swaggerOptions: {
+      docExpansion: 'none',
+      operationsSorter: 'alpha',
+      tagsSorter: 'alpha',
+      persistAuthorization: true,
+    },
+  })
+);
+
 
 app.use(
   '/api-docs',
@@ -89,3 +117,10 @@ const startServer = async () => {
 };
 
 startServer();
+
+
+
+
+
+
+

@@ -36,34 +36,49 @@ const router = Router();
  *         schema:
  *           type: integer
  *           default: 1
+ *         description: Page number
  *       - in: query
  *         name: perPage
  *         schema:
  *           type: integer
  *           default: 10
+ *         description: Number of users per page
+ *       - in: query
+ *         name: sortBy
+ *         schema:
+ *           type: string
+ *           enum: [name, email, createdAt]
+ *           default: createdAt
+ *         description: Field to sort users by
+ *       - in: query
+ *         name: sortOrder
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *           default: asc
+ *         description: Sorting direction
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search by name or email
  *     responses:
  *       200:
  *         description: List of users with pagination
  *         content:
  *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 users:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/User'
- *                 pagination:
- *                   type: object
- *                   properties:
- *                     page:
- *                       type: integer
- *                     perPage:
- *                       type: integer
- *                     total:
- *                       type: integer
- *                     pages:
- *                       type: integer
+ *             example:
+ *               page: 1
+ *               perPage: 10
+ *               total: 42
+ *               totalPages: 5
+ *               users:
+ *                 - _id: "64f0c8a1e3b1a123456789ab"
+ *                   name: "John Doe"
+ *                   email: "john@example.com"
+ *                   avatarUrl: "https://example.com/avatar.jpg"
+ *       500:
+ *         description: Server error
  */
 router.get('/', celebrate(getAllUsersSchema), getAllUsers);
 
@@ -80,8 +95,11 @@ router.get('/', celebrate(getAllUsersSchema), getAllUsers);
  *         description: Current user info
  *         content:
  *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/User'
+ *             example:
+ *               _id: "64f0c8a1e3b1a123456789cd"
+ *               name: "John Doe"
+ *               email: "john@example.com"
+ *               avatarUrl: "https://example.com/avatar.jpg"
  *       401:
  *         description: Unauthorized
  */
@@ -100,42 +118,57 @@ router.get('/me', authenticate, getCurrentUser);
  *         schema:
  *           type: string
  *           example: "64f0c8a1e3b1a123456789ab"
+ *         description: Unique user ID (MongoDB ObjectId)
  *       - in: query
  *         name: page
  *         schema:
  *           type: integer
  *           default: 1
+ *         description: Page number for user's stories
  *       - in: query
  *         name: perPage
  *         schema:
  *           type: integer
  *           default: 10
+ *         description: Number of stories per page
+ *       - in: query
+ *         name: sortBy
+ *         schema:
+ *           type: string
+ *           enum: [createdAt, title]
+ *           default: createdAt
+ *         description: Field to sort stories by
+ *       - in: query
+ *         name: sortOrder
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *           default: desc
+ *         description: Sorting direction for stories
  *     responses:
  *       200:
  *         description: User info with their stories
  *         content:
  *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 user:
- *                   $ref: '#/components/schemas/User'
- *                 pageNum:
- *                   type: integer
- *                 perPageNum:
- *                   type: integer
- *                 totalStories:
- *                   type: integer
- *                 totalPages:
- *                   type: integer
- *                 stories:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Story'
+ *             example:
+ *               _id: "64f0c8a1e3b1a123456789ab"
+ *               name: "John Doe"
+ *               email: "john@example.com"
+ *               avatarUrl: "https://example.com/avatar.jpg"
+ *               stories:
+ *                 - _id: "64f0c8a1e3b1a123456789cd"
+ *                   title: "My First Story"
+ *                   category:
+ *                     _id: "65fb50c80ae91338641121f0"
+ *                     name: "Travel"
+ *                   formattedDate: "27.02.2026"
+ *                   favoriteCount: 3
  *       400:
  *         description: Invalid user ID
  *       404:
  *         description: User not found
+ *       500:
+ *         description: Internal server error
  */
 router.get('/:id', celebrate(getUserStoriesSchema), getUserById);
 
@@ -148,6 +181,7 @@ router.get('/:id', celebrate(getUserStoriesSchema), getUserById);
  *     security:
  *       - cookieAuth: []
  *     requestBody:
+ *       required: true
  *       content:
  *         multipart/form-data:
  *           schema:
@@ -158,20 +192,18 @@ router.get('/:id', celebrate(getUserStoriesSchema), getUserById);
  *               avatar:
  *                 type: string
  *                 format: binary
+ *                 description: New avatar image
  *     responses:
  *       200:
  *         description: Avatar updated
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 avatarUrl:
- *                   type: string
  *       400:
  *         description: No file provided
+ *       401:
+ *         description: Unauthorized
  *       404:
  *         description: User not found
+ *       500:
+ *         description: Internal server error
  */
 router.patch('/me/avatar', authenticate, uploadAvatar.single('avatar'), updateUserAvatar);
 
@@ -184,6 +216,7 @@ router.patch('/me/avatar', authenticate, uploadAvatar.single('avatar'), updateUs
  *     security:
  *       - cookieAuth: []
  *     requestBody:
+ *       required: true
  *       content:
  *         application/json:
  *           schema:
@@ -196,12 +229,14 @@ router.patch('/me/avatar', authenticate, uploadAvatar.single('avatar'), updateUs
  *     responses:
  *       200:
  *         description: Profile updated
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/User'
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
  *       404:
  *         description: User not found
+ *       500:
+ *         description: Internal server error
  */
 router.patch('/me/profile', authenticate, celebrate(updateUserSchema), updateUserInfo);
 
