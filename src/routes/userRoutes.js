@@ -107,6 +107,76 @@ router.get('/me', authenticate, getCurrentUser);
 
 /**
  * @swagger
+ * /users/me/avatar:
+ *   patch:
+ *     summary: Update current user's avatar
+ *     tags: [Users]
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - avatar
+ *             properties:
+ *               avatar:
+ *                 type: string
+ *                 format: binary
+ *                 description: Image file (jpg, png, webp), max 500KB
+ *     responses:
+ *       200:
+ *         description: Avatar updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 avatarUrl:
+ *                   type: string
+ *                   example: "https://res.cloudinary.com/..."
+ *       400:
+ *         description: Bad request (no file or invalid format)
+ */
+router.patch('/me/avatar', authenticate, uploadAvatar.single('avatar'), updateUserAvatar);
+
+/**
+ * @swagger
+ * /users/me/profile:
+ *   patch:
+ *     summary: Update current user's profile info
+ *     tags: [Users]
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Profile updated
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Internal server error
+ */
+router.patch('/me/profile', authenticate, celebrate(updateUserSchema), updateUserInfo);
+
+/**
+ * @swagger
  * /users/{id}:
  *   get:
  *     summary: Get user by ID with their stories
@@ -171,73 +241,5 @@ router.get('/me', authenticate, getCurrentUser);
  *         description: Internal server error
  */
 router.get('/:id', celebrate(getUserStoriesSchema), getUserById);
-
-/**
- * @swagger
- * /users/me/avatar:
- *   patch:
- *     summary: Update current user's avatar
- *     tags: [Users]
- *     security:
- *       - cookieAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             required:
- *               - avatar
- *             properties:
- *               avatar:
- *                 type: string
- *                 format: binary
- *                 description: New avatar image
- *     responses:
- *       200:
- *         description: Avatar updated
- *       400:
- *         description: No file provided
- *       401:
- *         description: Unauthorized
- *       404:
- *         description: User not found
- *       500:
- *         description: Internal server error
- */
-router.patch('/me/avatar', authenticate, uploadAvatar.single('avatar'), updateUserAvatar);
-
-/**
- * @swagger
- * /users/me/profile:
- *   patch:
- *     summary: Update current user's profile info
- *     tags: [Users]
- *     security:
- *       - cookieAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *               description:
- *                 type: string
- *     responses:
- *       200:
- *         description: Profile updated
- *       400:
- *         description: Validation error
- *       401:
- *         description: Unauthorized
- *       404:
- *         description: User not found
- *       500:
- *         description: Internal server error
- */
-router.patch('/me/profile', authenticate, celebrate(updateUserSchema), updateUserInfo);
 
 export default router;

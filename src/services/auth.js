@@ -17,10 +17,14 @@ export const createSession = async (userId) => {
 export const setSessionCookies = (res, session) => {
   const isProd = process.env.NODE_ENV === 'production';
 
-  res.cookie('accessToken', session.accessToken, {
+  const cookieOptions = {
     httpOnly: true,
-    secure: isProd,
-    sameSite: isProd ? 'none' : 'lax',
+    secure: true,
+    sameSite: 'none',
+  };
+
+  res.cookie('accessToken', session.accessToken, {
+    ...cookieOptions,
     maxAge: FIFTEEN_MINUTES,
   });
 
