@@ -136,8 +136,7 @@ router.get("/check", authenticate, checkSession);
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - email
+ *             required: [email]
  *             properties:
  *               email:
  *                 type: string
@@ -166,9 +165,7 @@ router.post(
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - token
- *               - password
+ *             required: [token, password]
  *             properties:
  *               token:
  *                 type: string

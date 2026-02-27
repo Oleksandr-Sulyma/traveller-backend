@@ -30,8 +30,44 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const publicPath = path.join(__dirname, '../public');
 
+<<<<<<< HEAD
 // 1. ДОВІРА ПРОКСІ (Обов'язково для Render/Rate Limiter)
 app.set('trust proxy', 1);
+=======
+app.use(helmet());
+
+const allowedOrigins = [
+  process.env.FRONTEND_DOMAIN,
+  'http://localhost:3000',
+  'http://localhost:5173'
+];
+
+app.use(cors({
+  methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
+
+app.use(logger);
+app.use(express.json({ limit: '5mb' }));
+app.use(cookieParser());
+
+
+app.use('/public', express.static(path.join(__dirname, '../public')));
+
+
+const swaggerSpec = swaggerJsdoc(swaggerOptions);
+app.get('/api-docs.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
+});
+>>>>>>> 24c9852 (Fix routes and controllers)
 
 // 2. БЕЗПЕКА (Helmet з CSP для Swagger та Cloudinary)
 app.use(
@@ -51,6 +87,7 @@ directives: {
 }),
 );
 
+<<<<<<< HEAD
 // 3. CORS
 const allowedOrigins = [
 process.env.FRONTEND_DOMAIN,
@@ -76,6 +113,9 @@ credentials: true,
 app.use(logger);
 app.use(express.json({ limit: '5mb' }));
 app.use(cookieParser());
+=======
+app.use(generalLimiter);
+>>>>>>> 24c9852 (Fix routes and controllers)
 
 // 5. СТАТИЧНІ ФАЙЛИ
 app.use('/public', express.static(publicPath));
@@ -136,6 +176,7 @@ const startServer = async () => {
   try {
     await connectMongoDB();
     app.listen(PORT, () => {
+<<<<<<< HEAD
       console.log(`🚀 Server ready in ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'} mode`)
        console.log(`🔗 URL: http://localhost:${PORT}`);
       console.log(`📖 Swagger: http://localhost:${PORT}/api-docs`);
@@ -145,3 +186,15 @@ console.error('💥 Critical error during startup:', error);
 process.exit(1);
 }
 };
+=======
+      console.log(`🚀 Server ready on port ${PORT}`);
+      console.log(`📖 Swagger: http://localhost:${PORT}/api-docs`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+};
+
+startServer();
+>>>>>>> 24c9852 (Fix routes and controllers)

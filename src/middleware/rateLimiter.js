@@ -13,22 +13,16 @@ export const generalLimiter = rateLimit({
     message: 'Too many requests from this IP, please try again after 15 minutes',
   },
 
-  // Стандартні заголовки Draft-6 (RateLimit-* headers)
   standardHeaders: true,
 
-  // Вимикає заголовок X-RateLimit-* (застарілий)
   legacyHeaders: false,
 
-  // Не рахувати запити, які завершилися помилкою (опціонально)
   skipFailedRequests: !isProduction,
 
-  // Дозволяє довіряти проксі (Render, Heroku, Vercel), якщо вони є
   trustProxy: true,
 });
 
-/** * Спеціальний, ще жорсткіший лімітер для логіну та реєстрації
- * (захист від підбору паролів)
- */
+
 export const authLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 година
   max: isProduction ? 5 : 100, // 5 спроб на годину в проді

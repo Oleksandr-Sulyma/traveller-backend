@@ -155,7 +155,7 @@ export const getSavedStories = async (req, res) => {
 
 // --- ДОДАТИ В ОБРАНЕ ---
 export const addToSave = async (req, res) => {
-  const { storyId } = req.params;
+  const { id } = req.params;
   const userId = req.user._id;
 
   const story = await Story.findById(storyId);
@@ -176,7 +176,7 @@ export const addToSave = async (req, res) => {
 
 // --- ВИДАЛИТИ З ОБРАНОГО ---
 export const removeFromSave = async (req, res) => {
-  const { storyId } = req.params;
+  const { id } = req.params;
   const userId = req.user._id;
 
   const user = await User.findById(userId);
@@ -186,7 +186,7 @@ export const removeFromSave = async (req, res) => {
 
   const updatedUser = await User.findByIdAndUpdate(
     userId,
-    { $pull: { savedStories: storyId } },
+    { $pull: { savedStories: id } },
     { new: true }
   ).populate('savedStories');
 
@@ -228,7 +228,7 @@ export const createStory = async (req, res) => {
 
 // --- ОНОВИТИ ІСТОРІЮ ---
 export const updateStory = async (req, res) => {
-  const { storyId } = req.params;
+  const { id } = req.params;
   const { title, article, category } = req.body;
   const imgBuffer = req.file?.buffer;
 

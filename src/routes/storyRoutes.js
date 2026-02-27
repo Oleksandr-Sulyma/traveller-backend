@@ -1,9 +1,5 @@
-// storyRouter.js
-import { Router } from "express";
-import { celebrate } from "celebrate";
-import { authenticate } from "../middleware/authenticate.js";
-import { uploadStoryImg } from "../middleware/multer.js";
-import * as schemas from "../validations/storyValidation.js";
+import { Router } from 'express';
+import { authenticate } from '../middleware/authenticate.js';
 import {
   getAllStories,
   getStoryById,
@@ -137,7 +133,7 @@ router.get(
  *     tags: [Stories]
  *     parameters:
  *       - in: path
- *         name: storyId
+ *         name: id
  *         required: true
  *         schema:
  *           type: string
