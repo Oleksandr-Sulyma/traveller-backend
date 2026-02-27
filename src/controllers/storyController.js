@@ -6,6 +6,12 @@ import { saveFileToCloudinary } from "../utils/saveFileToCloudinary.js";
 import { uploadFileOrThrowError } from "../utils/uploadFileOrThrowError.js";
 import dayjs from "dayjs";
 
+// Допоміжна функція для форматування відповіді (щоб не дублювати код)
+const formatStory = (story) => ({
+  ...story.toObject(),
+  formattedDate: dayjs(story.date).format("DD.MM.YYYY"),
+});
+
 export const getAllStories = async (req, res) => {
   const {
     page = 1,
@@ -13,7 +19,6 @@ export const getAllStories = async (req, res) => {
     category,
     author,
     favorite,
-    // Змінено за замовчуванням на createdAt для сортування за датою публікації
     sortBy = "createdAt",
     sortOrder = "desc",
   } = req.query;
@@ -48,26 +53,19 @@ export const getAllStories = async (req, res) => {
     Story.find(filter)
       .skip(skip)
       .limit(limitNum)
-      // Сортування за вибраним полем (за замовчуванням createdAt: -1)
       .sort({ [sortBy]: normalizedSortOrder })
       .populate("category", "name")
       .populate("ownerId", "name avatarUrl"),
   ]);
-
-  const formattedStories = stories.map((s) => ({
-    ...s.toObject(),
-    formattedDate: dayjs(s.date).format("DD.MM.YYYY"),
-  }));
 
   res.status(200).json({
     page: pageNum,
     perPage: limitNum,
     total,
     totalPages: Math.ceil(total / limitNum),
-    stories: formattedStories,
+    stories: stories.map(formatStory),
   });
 };
-
 
 export const getStoryById = async (req, res) => {
   const { id } = req.params;
@@ -77,74 +75,41 @@ export const getStoryById = async (req, res) => {
 
   if (!story) throw createHttpError(404, "Story not found");
 
-  res.status(200).json({
-    ...story.toObject(),
-    formattedDate: dayjs(story.date).format("DD.MM.YYYY"),
-  });
+  res.status(200).json(formatStory(story));
 };
 
 export const getOwnStories = async (req, res) => {
   const userId = req.user._id;
   const { page = 1, perPage = 10 } = req.query;
-  const skip = (page - 1) * perPage;
-
-  const [total, stories] = await Promise.all([
-    Story.countDocuments({ ownerId: userId }),
-    Story.find({ ownerId: userId })
-      .populate("category", "name")
-      .populate("ownerId", "name avatarUrl")
-      .skip(skip)
-      .limit(Number(perPage))
-      .sort({ favoriteCount: -1, createdAt: -1 }),
-  ]);
-
-  const formattedStories = stories.map((s) => ({
-    ...s.toObject(),
-    formattedDate: dayjs(s.date).format("DD.MM.YYYY"),
-  }));
-
-  res.status(200).json({
-    page: Number(page),
-    perPage: Number(perPage),
-    total,
-    totalPages: Math.ceil(total / perPage),
-    stories: formattedStories,
-  });
-};
-
 
   const pageNum = Math.max(1, Number(page));
   const limitNum = Math.min(Math.max(1, Number(perPage)), 100);
   const skip = (pageNum - 1) * limitNum;
 
-  const total = await Story.countDocuments({ ownerId: userId });
-
-  const stories = await Story.find({ ownerId: userId })
-    .skip(skip)
-    .limit(limitNum)
-    .sort({ createdAt: -1 })
-    .populate("category", "name")
-    .populate("ownerId", "name avatarUrl");
-
-  const formattedStories = stories.map((s) => ({
-    ...s.toObject(),
-    formattedDate: dayjs(s.date).format("DD.MM.YYYY"),
-  }));
+  const [total, stories] = await Promise.all([
+    Story.countDocuments({ ownerId: userId }),
+    Story.find({ ownerId: userId })
+      .skip(skip)
+      .limit(limitNum)
+      .sort({ createdAt: -1 }) // Сортування від нових до старих
+      .populate("category", "name")
+      .populate("ownerId", "name avatarUrl"),
+  ]);
 
   res.status(200).json({
     page: pageNum,
     perPage: limitNum,
     total,
     totalPages: Math.ceil(total / limitNum),
-    stories: formattedStories,
+    stories: stories.map(formatStory),
   });
 };
 
 export const getSavedStories = async (req, res) => {
   const userId = req.user._id;
   const { page = 1, perPage = 10 } = req.query;
-  const pageNum = Number(page);
-  const limitNum = Number(perPage);
+  const pageNum = Math.max(1, Number(page));
+  const limitNum = Math.min(Math.max(1, Number(perPage)), 100);
   const skip = (pageNum - 1) * limitNum;
 
   const user = await User.findById(userId);
@@ -160,17 +125,12 @@ export const getSavedStories = async (req, res) => {
     .skip(skip)
     .limit(limitNum);
 
-  const formattedStories = stories.map((s) => ({
-    ...s.toObject(),
-    formattedDate: dayjs(s.date).format("DD.MM.YYYY"),
-  }));
-
   res.status(200).json({
     page: pageNum,
     perPage: limitNum,
     total,
     totalPages: Math.ceil(total / limitNum),
-    stories: formattedStories,
+    stories: stories.map(formatStory),
   });
 };
 
@@ -181,7 +141,6 @@ export const addToSave = async (req, res) => {
   const story = await Story.findById(id);
   if (!story) throw createHttpError(404, "Story not found");
 
-  // Оновлюємо лічильник в історії та додаємо в масив юзера
   const [updatedUser] = await Promise.all([
     User.findByIdAndUpdate(
       userId,
@@ -192,7 +151,6 @@ export const addToSave = async (req, res) => {
   ]);
 
   if (!updatedUser) throw createHttpError(404, "User not found");
-
   res.status(200).json(updatedUser.savedStories);
 };
 
@@ -243,10 +201,7 @@ export const createStory = async (req, res) => {
     .populate("category", "name")
     .populate("ownerId", "name avatarUrl");
 
-  res.status(201).json({
-    ...populatedStory.toObject(),
-    formattedDate: dayjs(populatedStory.date).format("DD.MM.YYYY"),
-  });
+  res.status(201).json(formatStory(populatedStory));
 };
 
 export const updateStory = async (req, res) => {
@@ -280,10 +235,7 @@ export const updateStory = async (req, res) => {
     .populate("category", "name")
     .populate("ownerId", "name avatarUrl");
 
-  res.status(200).json({
-    ...updatedStory.toObject(),
-    formattedDate: dayjs(updatedStory.date).format("DD.MM.YYYY"),
-  });
+  res.status(200).json(formatStory(updatedStory));
 };
 
 export const deleteStory = async (req, res) => {
