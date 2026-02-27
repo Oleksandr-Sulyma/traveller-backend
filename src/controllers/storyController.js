@@ -68,6 +68,7 @@ export const getAllStories = async (req, res) => {
   });
 };
 
+
 export const getStoryById = async (req, res) => {
   const { id } = req.params;
   const story = await Story.findById(id)
@@ -85,6 +86,32 @@ export const getStoryById = async (req, res) => {
 export const getOwnStories = async (req, res) => {
   const userId = req.user._id;
   const { page = 1, perPage = 10 } = req.query;
+  const skip = (page - 1) * perPage;
+
+  const [total, stories] = await Promise.all([
+    Story.countDocuments({ ownerId: userId }),
+    Story.find({ ownerId: userId })
+      .populate("category", "name")
+      .populate("ownerId", "name avatarUrl")
+      .skip(skip)
+      .limit(Number(perPage))
+      .sort({ favoriteCount: -1, createdAt: -1 }),
+  ]);
+
+  const formattedStories = stories.map((s) => ({
+    ...s.toObject(),
+    formattedDate: dayjs(s.date).format("DD.MM.YYYY"),
+  }));
+
+  res.status(200).json({
+    page: Number(page),
+    perPage: Number(perPage),
+    total,
+    totalPages: Math.ceil(total / perPage),
+    stories: formattedStories,
+  });
+};
+
 
   const pageNum = Math.max(1, Number(page));
   const limitNum = Math.min(Math.max(1, Number(perPage)), 100);

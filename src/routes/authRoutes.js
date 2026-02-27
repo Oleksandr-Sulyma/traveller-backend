@@ -24,15 +24,15 @@ const router = Router();
  * @swagger
  * tags:
  *   - name: Auth
- *     description: Керування автентифікацією та сесіями користувачів
+ *     description: User authentication and session management
  */
 
 /**
  * @swagger
  * /auth/register:
  *   post:
- *     summary: Реєстрація нового користувача
- *     description: Створює обліковий запис та встановлює сесійні куки.
+ *     summary: Register a new user
+ *     description: Creates a new account and automatically sets session cookies.
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -42,7 +42,7 @@ const router = Router();
  *             $ref: '#/components/schemas/RegisterUser'
  *     responses:
  *       201:
- *         description: Користувач успішно зареєстрований
+ *         description: User successfully registered
  *         content:
  *           application/json:
  *             example:
@@ -53,7 +53,7 @@ const router = Router();
  *       400:
  *         $ref: '#/components/responses/ValidationError'
  *       409:
- *         description: Email уже використовується
+ *         description: Email already in use
  */
 router.post("/register", authLimiter, celebrate(registerUserSchema), registerUser);
 
@@ -61,7 +61,7 @@ router.post("/register", authLimiter, celebrate(registerUserSchema), registerUse
  * @swagger
  * /auth/login:
  *   post:
- *     summary: Вхід у систему
+ *     summary: Log in to the system
  *     tags: [Auth]
  *     requestBody:
  *       required: true
