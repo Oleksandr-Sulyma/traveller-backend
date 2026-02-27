@@ -6,6 +6,7 @@ const sessionSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,
+      index: true, 
     },
     accessToken: {
       type: String,
@@ -22,6 +23,7 @@ const sessionSchema = new mongoose.Schema(
     refreshTokenValidUntil: {
       type: Date,
       required: true,
+      index: { expires: 0 },
     },
   },
   {

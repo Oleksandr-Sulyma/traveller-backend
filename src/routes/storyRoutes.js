@@ -1,19 +1,16 @@
-// storyRouter.js
-import { Router } from "express";
-import { celebrate } from "celebrate";
-import { authenticate } from "../middleware/authenticate.js";
-import { uploadStoryImg } from "../middleware/multer.js";
-import * as schemas from "../validations/storyValidation.js";
+import { Router } from 'express';
+import { authenticate } from '../middleware/authenticate.js';
 import {
   getAllStories,
   getStoryById,
-  getMyStories,
-  getSavedStories,
   createStory,
   updateStory,
-  addToSave,
-  removeFromSave,
-} from "../controllers/storyController.js";
+  deleteStory,
+  getOwnStories,
+  getSavedStories,
+} from '../controllers/storyController.js';
+
+import { uploadStoryImg } from '../middleware/multer.js';
 
 const router = Router();
 
@@ -21,165 +18,125 @@ const router = Router();
  * @swagger
  * tags:
  *   - name: Stories
- *     description: Manage stories and user interactions
+ *     description: CRUD та фільтрація історій
  */
 
 /**
  * @swagger
  * /stories:
  *   get:
- *     summary: Get all stories with optional filters
+ *     summary: Отримати список історій з прикладами фільтрації
+ *     description: |
+ *       Цей ендпоінт дозволяє гнучко фільтрувати історії.
+ *       **Приклади запитів:**
+ *       * `?category=65fb50c8...` — фільтр за категорією.
+ *       * `?sortBy=favoriteCount&sortOrder=desc` — найпопулярніші історії зверху.
+ *       * `?author=65fb50c8...` — всі історії конкретного автора.
+ *       * `?favorite=true` — отримати збережені історії (потребує авторизації).
  *     tags: [Stories]
  *     parameters:
  *       - in: query
  *         name: page
  *         schema: { type: integer, default: 1 }
- *         description: Page number for pagination
+ *         description: Номер сторінки
  *       - in: query
  *         name: perPage
  *         schema: { type: integer, default: 10 }
- *         description: Number of stories per page
+ *         description: Кількість елементів
  *       - in: query
  *         name: category
  *         schema: { type: string }
- *         description: Filter stories by category ID (MongoDB ObjectId)
+ *         example: "65fb50c80ae91338641121f0"
+ *         description: MongoDB ID категорії
  *       - in: query
  *         name: author
  *         schema: { type: string }
- *         description: Filter stories by author ID (MongoDB ObjectId)
+ *         example: "65fb50c80ae91338641121e5"
+ *         description: MongoDB ID автора (ownerId)
+ *       - in: query
+ *         name: favorite
+ *         schema: { type: string, enum: ["true", "false"] }
+ *         description: Якщо true, повертає тільки збережені історії юзера
  *       - in: query
  *         name: sortBy
- *         schema: { type: string, enum: [createdAt, title], default: createdAt }
- *         description: Field to sort stories
+ *         schema:
+ *           type: string
+ *           enum: [createdAt, title, favoriteCount]
+ *           default: createdAt
  *       - in: query
  *         name: sortOrder
- *         schema: { type: string, enum: [asc, desc], default: desc }
- *         description: Sort order (ascending or descending)
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *           default: desc
  *     responses:
  *       200:
- *         description: List of stories
+ *         description: Успішно отримати список історій
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 page: { type: integer }
- *                 perPage: { type: integer }
- *                 total: { type: integer }
- *                 totalPages: { type: integer }
- *                 stories:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Story'
- *             example:
- *               page: 1
- *               perPage: 10
- *               total: 42
- *               totalPages: 5
- *               stories:
- *                 - _id: "64f0c8a1e3b1a123456789ab"
- *                   title: "Journey to the Carpathians"
- *                   article: "It was an amazing adventure on Hoverla..."
- *                   img: "https://example.com/img/story1.jpg"
- *                   category:
- *                     _id: "65fb50c80ae91338641121f0"
- *                     name: "Travel"
- *                   ownerId:
- *                     _id: "64f0c8a1e3b1a123456789cd"
- *                     name: "John Doe"
- *                     avatarUrl: "https://example.com/img/avatar.jpg"
- *                   formattedDate: "27.02.2026"
- *                   favoriteCount: 15
+ *               $ref: '#/components/schemas/PaginatedStories'
+ *             examples:
+ *               SuccessResponse:
+ *                 summary: Приклад відповіді (stories з populate)
+ *                 value:
+ *                   page: 1
+ *                   perPage: 10
+ *                   total: 1
+ *                   totalPages: 1
+ *                   stories:
+ *                     - _id: "65fb50c80ae91338641121f5"
+ *                       title: "Подорож до Карпат"
+ *                       article: "Це була неймовірна пригода..."
+ *                       img: "https://res.cloudinary.com/..."
+ *                       category: { _id: "65fb50c8...", name: "Гори" }
+ *                       ownerId: { _id: "65fb...", name: "Олександр", avatarUrl: "..." }
+ *                       favoriteCount: 12
+ *                       formattedDate: "27.02.2026"
  */
-router.get("/", celebrate(schemas.getAllStoriesSchema), getAllStories);
-
-/**
- * @swagger
- * /stories/{storyId}:
- *   get:
- *     summary: Get story details by ID
- *     tags: [Stories]
- *     parameters:
- *       - in: path
- *         name: storyId
- *         required: true
- *         schema: { type: string }
- *         description: Story unique ID
- *     responses:
- *       200:
- *         description: Story data fetched successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Story'
- *             example:
- *               _id: "64f0c8a1e3b1a123456789ab"
- *               title: "Journey to the Carpathians"
- *               article: "It was an amazing adventure on Hoverla..."
- *               img: "https://example.com/img/story1.jpg"
- *               category:
- *                 _id: "65fb50c80ae91338641121f0"
- *                 name: "Travel"
- *               ownerId:
- *                 _id: "64f0c8a1e3b1a123456789cd"
- *                 name: "John Doe"
- *                 avatarUrl: "https://example.com/img/avatar.jpg"
- *               formattedDate: "27.02.2026"
- *               favoriteCount: 15
- *       404:
- *         description: Story not found
- */
-router.get("/:storyId", celebrate(schemas.getStoryByIdSchema), getStoryById);
+router.get('/', getAllStories);
 
 /**
  * @swagger
  * /stories/own:
  *   get:
- *     summary: Get current user's own stories
+ *     summary: Отримати власні історії
  *     tags: [Stories]
  *     security:
  *       - cookieAuth: []
- *     parameters:
- *       - in: query
- *         name: page
- *         schema: { type: integer, default: 1 }
- *         description: Page number
- *       - in: query
- *         name: perPage
- *         schema: { type: integer, default: 10 }
- *         description: Number of stories per page
  *     responses:
  *       200:
- *         description: Successfully fetched own stories
+ *         description: Список власних історій
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/PaginatedStories'
  */
-router.get("/own", authenticate, celebrate(schemas.getMyStoriesSchema), getMyStories);
+router.get('/own', authenticate, getOwnStories);
 
 /**
  * @swagger
  * /stories/saved:
  *   get:
- *     summary: Get stories saved by the current user
+ *     summary: Отримати збережені історії
  *     tags: [Stories]
  *     security:
  *       - cookieAuth: []
- *     parameters:
- *       - in: query
- *         name: page
- *         schema: { type: integer, default: 1 }
- *       - in: query
- *         name: perPage
- *         schema: { type: integer, default: 10 }
  *     responses:
  *       200:
- *         description: Successfully fetched saved stories
+ *         description: Список збережених історій
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/PaginatedStories'
  */
-router.get("/saved", authenticate, celebrate(schemas.getSavedStoriesSchema), getSavedStories);
+router.get('/saved', authenticate, getSavedStories);
 
 /**
  * @swagger
  * /stories:
  *   post:
- *     summary: Create a new story
+ *     summary: Створити історію
  *     tags: [Stories]
  *     security:
  *       - cookieAuth: []
@@ -188,89 +145,127 @@ router.get("/saved", authenticate, celebrate(schemas.getSavedStoriesSchema), get
  *       content:
  *         multipart/form-data:
  *           schema:
- *             type: object
- *             required: [title, article, category, img]
- *             properties:
- *               title: { type: string, example: "Journey to the Carpathians" }
- *               article: { type: string, example: "It was an amazing adventure..." }
- *               category: { type: string, description: "Category ID", example: "65fb50c80ae91338641121f0" }
- *               img: { type: string, format: binary, description: "Cover image (max 2MB)" }
+ *             $ref: '#/components/schemas/CreateStory'
  *     responses:
- *       201: { description: Story created successfully }
- *       400: { description: Validation error or invalid category }
- *       401: { description: Unauthorized }
- *       500: { description: Failed to create story }
+ *       201:
+ *         description: Історія створена
  */
-router.post("/", authenticate, uploadStoryImg.single("img"), celebrate(schemas.createStorySchema), createStory);
+router.post('/', authenticate, uploadStoryImg.single('img'), createStory);
 
 /**
  * @swagger
- * /stories/{storyId}:
+ * /stories/{id}:
+ *   get:
+ *     summary: Отримати історію по ID
+ *     tags: [Stories]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Деталі історії
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Story'
+ */
+router.get('/:id', getStoryById);
+
+/**
+ * @swagger
+ * /stories/{id}:
  *   patch:
- *     summary: Update an existing story
+ *     summary: Оновити історію
  *     tags: [Stories]
  *     security:
  *       - cookieAuth: []
  *     parameters:
  *       - in: path
- *         name: storyId
+ *         name: id
  *         required: true
  *         schema: { type: string }
  *     requestBody:
  *       content:
  *         multipart/form-data:
  *           schema:
- *             type: object
- *             properties:
- *               title: { type: string }
- *               article: { type: string }
- *               category: { type: string }
- *               img: { type: string, format: binary }
+ *             $ref: '#/components/schemas/UpdateStory'
  *     responses:
- *       200: { description: Story updated successfully }
- *       400: { description: Invalid category }
- *       403: { description: No permission to edit this story }
- *       404: { description: Story not found }
- *       500: { description: Failed to update story }
+ *       200:
+ *         description: Оновлено
  */
-router.patch("/:storyId", authenticate, uploadStoryImg.single("img"), celebrate(schemas.updateStorySchema), updateStory);
+router.patch('/:id', authenticate, uploadStoryImg.single('img'), updateStory);
 
 /**
  * @swagger
- * /stories/{storyId}/save:
- *   post:
- *     summary: Add a story to saved list
- *     tags: [Stories]
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: storyId
- *         required: true
- *         schema: { type: string }
- *     responses:
- *       200: { description: Story added to saved }
- *       404: { description: Story not found }
- */
-router.post("/:storyId/save", authenticate, addToSave);
-
-/**
- * @swagger
- * /stories/{storyId}/save:
+ * /stories/{id}:
  *   delete:
- *     summary: Remove a story from saved list
+ *     summary: Видалити історію
  *     tags: [Stories]
  *     security:
  *       - cookieAuth: []
  *     parameters:
  *       - in: path
- *         name: storyId
+ *         name: id
  *         required: true
  *         schema: { type: string }
  *     responses:
- *       200: { description: Story removed from saved }
- *       404: { description: User not found }
+ *       204:
+ *         description: Видалено
  */
-router.delete("/:storyId/save", authenticate, removeFromSave);
+router.delete('/:id', authenticate, deleteStory);
 
 export default router;
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Story:
+ *       type: object
+ *       properties:
+ *         _id: { type: string }
+ *         title: { type: string }
+ *         article: { type: string }
+ *         img: { type: string }
+ *         category:
+ *           type: object
+ *           properties:
+ *             _id: { type: string }
+ *             name: { type: string }
+ *         ownerId:
+ *           type: object
+ *           properties:
+ *             _id: { type: string }
+ *             name: { type: string }
+ *             avatarUrl: { type: string }
+ *         favoriteCount: { type: integer }
+ *         formattedDate: { type: string, example: "27.02.2026" }
+ *     CreateStory:
+ *       type: object
+ *       required: [title, article, img, category]
+ *       properties:
+ *         title: { type: string }
+ *         article: { type: string }
+ *         img: { type: string, format: binary }
+ *         category: { type: string, description: "ID категорії" }
+ *     UpdateStory:
+ *       type: object
+ *       properties:
+ *         title: { type: string }
+ *         article: { type: string }
+ *         img: { type: string, format: binary }
+ *         category: { type: string }
+ *     PaginatedStories:
+ *       type: object
+ *       properties:
+ *         stories:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/Story'
+ *         page: { type: integer }
+ *         perPage: { type: integer }
+ *         total: { type: integer }
+ *         totalPages: { type: integer }
+ */
