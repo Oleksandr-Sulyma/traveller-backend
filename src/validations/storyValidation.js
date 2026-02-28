@@ -1,116 +1,65 @@
 import { Joi, Segments } from 'celebrate';
-import { Category } from '../models/category.js';
-<<<<<<< HEAD
 
 // Спільна схема для валідації MongoDB ID
 const objectIdSchema = Joi.string().hex().length(24);
-=======
->>>>>>> 8b9aa3f (fix all routs)
 
 export const paginationSchema = {
-  page: Joi.number().integer().min(1).default(1),
-  perPage: Joi.number().integer().min(1).max(50).default(10),
+page: Joi.number().integer().min(1).default(1),
+perPage: Joi.number().integer().min(1).max(50).default(10),
 };
 
-<<<<<<< HEAD
 // Валідація для отримання всіх історій (фільтрація)
-
 export const getAllStoriesSchema = {
-  [Segments.QUERY]: Joi.object({
-    ...paginationSchema,
-    category: objectIdSchema,
-    author: objectIdSchema,
-    favorite: Joi.string().valid('true', 'false'),
-    sortBy: Joi.string().valid('createdAt', 'title', 'favoriteCount').default('createdAt'),
-    sortOrder: Joi.string().valid('asc', 'desc').default('desc'),
-=======
-const validateCategory = async (CSSMathValue, helpers) =>{
-  const categoryExists = await Category.findById(value);
-  if (!categoryExists) {
-    throw new Error('Category not found');
-  }
-  return value;
-};
-
-export const createStorySchema = {
-  [Segments.BODY]: Joi.object({
-    title: Joi.string().max(80).required(),
-    article: Joi.string().max(2500).required(),
-    category: Joi.string().hex().length(24).required().external(validateCategory),
-  }),
-};
-
-export const updateStorySchema = {
-  [Segments.PARAMS]: Joi.object({
-    storyId: Joi.string().hex().length(24).required(),
-  }),
-  [Segments.BODY]: Joi.object({
-    title: Joi.string().max(80),
-    article: Joi.string().max(2500),
-    category: Joi.string().hex().length(24).external(validateCategory),
-  }),
-};
-
-export const getStoryByIdSchema = {
-  [Segments.PARAMS]: Joi.object({
-    storyId: Joi.string().hex().length(24).required(),
->>>>>>> 8b9aa3f (fix all routs)
-  }),
+[Segments.QUERY]: Joi.object({
+...paginationSchema,
+category: objectIdSchema,
+author: objectIdSchema,
+favorite: Joi.string().valid('true', 'false'),
+sortBy: Joi.string().valid('createdAt', 'title', 'favoriteCount').default('createdAt'),
+sortOrder: Joi.string().valid('asc', 'desc').default('desc'),
+}),
 };
 
 // Валідація для створення історії
 export const createStorySchema = {
-  [Segments.BODY]: Joi.object({
-    title: Joi.string().min(3).max(80).required().trim(),
-    article: Joi.string().min(10).max(2500).required().trim(),
-    category: objectIdSchema.required().messages({
-      'any.required': 'Category ID is required',
-      'string.length': 'Invalid Category ID format',
-    }),
-  }),
+[Segments.BODY]: Joi.object({
+title: Joi.string().min(3).max(80).required().trim(),
+article: Joi.string().min(10).max(2500).required().trim(),
+category: objectIdSchema.required().messages({
+'any.required': 'Category ID is required',
+'string.length': 'Invalid Category ID format',
+}),
+}),
 };
 
 // Валідація для отримання за ID
-
 export const getStoryByIdSchema = {
-  [Segments.PARAMS]: Joi.object({
-    id: objectIdSchema.required(),
-  }),
+[Segments.PARAMS]: Joi.object({
+id: objectIdSchema.required(),
+}),
 };
 
 // Валідація для оновлення історії
-
 export const updateStorySchema = {
-  [Segments.PARAMS]: Joi.object({
-    id: objectIdSchema.required(),
-  }),
-  [Segments.BODY]: Joi.object({
-    title: Joi.string().min(3).max(80).trim(),
-    article: Joi.string().min(10).max(2500).trim(),
-    category: objectIdSchema,
-  }).min(1),
+[Segments.PARAMS]: Joi.object({
+id: objectIdSchema.required(),
+}),
+[Segments.BODY]: Joi.object({
+title: Joi.string().min(3).max(80).trim(),
+article: Joi.string().min(10).max(2500).trim(),
+category: objectIdSchema,
+}).min(1),
 };
 
 // Валідація для власних та збережених історій
-
 export const getMyStoriesSchema = {
-  [Segments.QUERY]: Joi.object({
-    ...paginationSchema,
-  }),
+[Segments.QUERY]: Joi.object({
+...paginationSchema,
+}),
 };
 
 export const getSavedStoriesSchema = {
-  [Segments.QUERY]: Joi.object({
-    ...paginationSchema,
-  }),
+[Segments.QUERY]: Joi.object({
+...paginationSchema,
+}),
 };
-<<<<<<< HEAD
-=======
-
-export const getAllStoriesSchema = {
-  [Segments.QUERY]: Joi.object({
-    ...paginationSchema,
-    category: Joi.string().hex().length(24).optional(),
-  }),
-};
->>>>>>> 8b9aa3f (fix all routs)

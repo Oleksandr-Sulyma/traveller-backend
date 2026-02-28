@@ -28,7 +28,7 @@ const formatStory = (storyObject) => {
   };
 };
 
-// --- ОТРИМАТИ ВСІ ІСТОРІЇ (З ФІЛЬТРАМИ ТА ПАГІНАЦІЄЮ) ---
+// --- ОТРИМАТИ ВСІ ІСТОРІЇ ---
 export const getAllStories = async (req, res) => {
   const {
     page = 1,
@@ -84,8 +84,8 @@ export const getAllStories = async (req, res) => {
 
 // --- ОТРИМАТИ ОДНУ ІСТОРІЮ ---
 export const getStoryById = async (req, res) => {
-  const { storyId } = req.params;
-  const story = await Story.findById(storyId)
+  const { id } = req.params;
+  const story = await Story.findById(id)
     .populate('category', 'name')
     .populate('ownerId', 'name avatarUrl');
 
@@ -158,18 +158,19 @@ export const addToSave = async (req, res) => {
   const { id } = req.params;
   const userId = req.user._id;
 
-  const story = await Story.findById(storyId);
+  const story = await Story.findById(id);
   if (!story) throw createHttpError(404, 'Story not found');
 
-  const updatedUser = await User.findByIdAndUpdate(
-    userId,
-    { $addToSet: { savedStories: storyId } },
-    { new: true }
-  ).populate('savedStories');
+  const [updatedUser] = await Promise.all([
+    User.findByIdAndUpdate(
+      userId,
+      { $addToSet: { savedStories: id } },
+      { new: true },
+    ).populate('savedStories'),
+    Story.findByIdAndUpdate(id, { $inc: { favoriteCount: 1 } }),
+  ]);
 
   if (!updatedUser) throw createHttpError(404, 'User not found');
-
-  await Story.findByIdAndUpdate(storyId, { $inc: { favoriteCount: 1 } });
 
   res.status(200).json(updatedUser.savedStories);
 };
@@ -182,16 +183,16 @@ export const removeFromSave = async (req, res) => {
   const user = await User.findById(userId);
   if (!user) throw createHttpError(404, 'User not found');
 
-  const wasSaved = user.savedStories.includes(storyId);
+  const wasSaved = user.savedStories.includes(id);
 
   const updatedUser = await User.findByIdAndUpdate(
     userId,
     { $pull: { savedStories: id } },
-    { new: true }
+    { new: true },
   ).populate('savedStories');
 
   if (wasSaved) {
-    await Story.findByIdAndUpdate(storyId, { $inc: { favoriteCount: -1 } });
+    await Story.findByIdAndUpdate(id, { $inc: { favoriteCount: -1 } });
   }
 
   res.status(200).json(updatedUser.savedStories);
@@ -208,7 +209,8 @@ export const createStory = async (req, res) => {
   if (!categoryEntity) throw createHttpError(400, 'Invalid category ID');
 
   const uploadedImg = await saveFileToCloudinary(imgBuffer);
-  if (!uploadedImg?.secure_url) throw createHttpError(500, 'Failed to upload image');
+  if (!uploadedImg?.secure_url)
+    throw createHttpError(500, 'Failed to upload image');
 
   const newStory = await Story.create({
     title,
@@ -232,7 +234,7 @@ export const updateStory = async (req, res) => {
   const { title, article, category } = req.body;
   const imgBuffer = req.file?.buffer;
 
-  const story = await Story.findById(storyId);
+  const story = await Story.findById(id);
   if (!story) throw createHttpError(404, 'Story not found');
   if (story.ownerId.toString() !== req.user._id.toString()) {
     throw createHttpError(403, 'Forbidden: You are not the owner');
@@ -254,7 +256,7 @@ export const updateStory = async (req, res) => {
 
   await story.save();
 
-  const updatedStory = await Story.findById(storyId)
+  const updatedStory = await Story.findById(id)
     .populate('category', 'name')
     .populate('ownerId', 'name avatarUrl');
 
@@ -263,8 +265,8 @@ export const updateStory = async (req, res) => {
 
 // --- ВИДАЛИТИ ІСТОРІЮ ---
 export const deleteStory = async (req, res) => {
-  const { storyId } = req.params;
-  const story = await Story.findById(storyId);
+  const { id } = req.params;
+  const story = await Story.findById(id);
 
   if (!story) throw createHttpError(404, 'Story not found');
   if (story.ownerId.toString() !== req.user._id.toString()) {

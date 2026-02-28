@@ -1,4 +1,5 @@
-import { Router } from 'express';
+import { Router } from "express";
+import { celebrate } from "celebrate";
 import { authenticate } from '../middleware/authenticate.js';
 import {
   getAllStories,
@@ -21,7 +22,6 @@ import {
   getMyStoriesSchema,
 } from '../validations/storyValidation.js';
 
-import { uploadStoryImg } from '../middleware/multer.js';
 
 const router = Router();
 
@@ -144,7 +144,7 @@ router.get(
  *             schema:
  *               $ref: '#/components/schemas/Story'
  */
-router.get('/:storyId', celebrate(getStoryByIdSchema), getStoryById);
+router.get('/:id', celebrate(getStoryByIdSchema), getStoryById);
 
 // --- РОУТИ ДЛЯ КЕРУВАННЯ ---
 
@@ -157,7 +157,7 @@ router.post(
 );
 
 router.patch(
-  '/:storyId',
+  '/:id',
   authenticate,
   uploadStoryImg.single('img'),
   celebrate(updateStorySchema),
@@ -165,7 +165,7 @@ router.patch(
 );
 
 router.delete(
-  '/:storyId',
+  '/:id',
   authenticate,
   celebrate(getStoryByIdSchema),
   deleteStory,
@@ -185,7 +185,7 @@ router.delete(
  *       200:
  *         description: Список ID збережених історій
  */
-router.post('/:storyId/save', authenticate, addToSave);
+router.post('/:id/save', authenticate, addToSave);
 
 /**
  * @swagger
@@ -199,7 +199,7 @@ router.post('/:storyId/save', authenticate, addToSave);
  *       200:
  *         description: Оновлений список ID
  */
-router.delete('/:storyId/save', authenticate, removeFromSave);
+router.delete('/:id/save', authenticate, removeFromSave);
 
 export default router;
 
