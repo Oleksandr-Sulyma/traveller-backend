@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { celebrate } from "celebrate";
-import { authenticate } from '../middleware/authenticate.js';
+import { authenticate } from "../middleware/authenticate.js";
 import {
   getAllStories,
   getStoryById,
@@ -9,16 +9,18 @@ import {
   deleteStory,
   getOwnStories,
   getSavedStories,
-} from '../controllers/storyController.js';
+  addToSave,
+  removeFromSave,
+} from "../controllers/storyController.js";
 
-import { uploadStoryImg } from '../middleware/multer.js';
+import { uploadStoryImg } from "../middleware/multer.js";
 import {
   getAllStoriesSchema,
   getStoryByIdSchema,
   createStorySchema,
   updateStorySchema,
   getMyStoriesSchema,
-} from '../validations/storyValidation.js';
+} from "../validations/storyValidation.js";
 
 const router = Router();
 
@@ -29,42 +31,38 @@ const router = Router();
  *     description: CRUD та фільтрація історій
  */
 
+// --- ПУБЛІЧНІ ТА ФІЛЬТРОВАНІ РОУТИ ---
+
 /**
  * @swagger
  * /stories:
  *   get:
- *     summary: Отримати список історій з прикладами фільтрації
- *     description: |
- *       Цей ендпоінт дозволяє гнучко фільтрувати історії.
- *       **Приклади запитів:**
- *       * `?category=65fb50c8...` — фільтр за категорією.
- *       * `?sortBy=favoriteCount&sortOrder=desc` — найпопулярніші історії зверху.
- *       * `?author=65fb50c8...` — всі історії конкретного автора.
- *       * `?favorite=true` — отримати збережені історії (потребує авторизації).
+ *     summary: Отримати список історій (з пагінацією та фільтрами)
  *     tags: [Stories]
  *     parameters:
  *       - in: query
  *         name: page
- *         schema: { type: integer, default: 1 }
- *         description: Номер сторінки
+ *         schema:
+ *           type: integer
+ *           default: 1
  *       - in: query
  *         name: perPage
- *         schema: { type: integer, default: 10 }
- *         description: Кількість елементів
+ *         schema:
+ *           type: integer
+ *           default: 10
  *       - in: query
  *         name: category
- *         schema: { type: string }
- *         example: "65fb50c80ae91338641121f0"
- *         description: MongoDB ID категорії
+ *         schema:
+ *           type: string
  *       - in: query
  *         name: author
- *         schema: { type: string }
- *         example: "65fb50c80ae91338641121e5"
- *         description: MongoDB ID автора (ownerId)
+ *         schema:
+ *           type: string
  *       - in: query
  *         name: favorite
- *         schema: { type: string, enum: ["true", "false"] }
- *         description: Якщо true, повертає тільки збережені історії юзера
+ *         schema:
+ *           type: string
+ *           enum: ["true", "false"]
  *       - in: query
  *         name: sortBy
  *         schema:
@@ -79,150 +77,118 @@ const router = Router();
  *           default: desc
  *     responses:
  *       200:
- *         description: Успішно отримати список історій
+ *         description: Успішно отримано список
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/PaginatedStories'
- *             examples:
- *               SuccessResponse:
- *                 summary: Приклад відповіді (stories з populate)
- *                 value:
- *                   page: 1
- *                   perPage: 10
- *                   total: 1
- *                   totalPages: 1
- *                   stories:
- *                     - _id: "65fb50c80ae91338641121f5"
- *                       title: "Подорож до Карпат"
- *                       article: "Це була неймовірна пригода..."
- *                       img: "https://res.cloudinary.com/..."
- *                       category: { _id: "65fb50c8...", name: "Гори" }
- *                       ownerId: { _id: "65fb...", name: "Олександр", avatarUrl: "..." }
- *                       favoriteCount: 12
- *                       formattedDate: "27.02.2026"
  */
-router.get('/', celebrate(getAllStoriesSchema), getAllStories);
+router.get("/", authenticate, celebrate(getAllStoriesSchema), getAllStories);
 
 /**
  * @swagger
  * /stories/own:
  *   get:
- *     summary: Отримати власні історії
+ *     summary: Отримати власні історії користувача
  *     tags: [Stories]
  *     security:
  *       - cookieAuth: []
  *     responses:
  *       200:
- *         description: Список власних історій
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/PaginatedStories'
  */
-router.get('/own', authenticate, celebrate(getMyStoriesSchema), getOwnStories);
+router.get("/own", authenticate, celebrate(getMyStoriesSchema), getOwnStories);
 
 /**
  * @swagger
  * /stories/saved:
  *   get:
- *     summary: Отримати збережені історії
+ *     summary: Отримати список збережених історій користувача
  *     tags: [Stories]
  *     security:
  *       - cookieAuth: []
  *     responses:
  *       200:
- *         description: Список збережених історій
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/PaginatedStories'
  */
-router.get('/saved', authenticate, celebrate(getMyStoriesSchema), getSavedStories);
-
-/**
- * @swagger
- * /stories:
- *   post:
- *     summary: Створити історію
- *     tags: [Stories]
- *     security:
- *       - cookieAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         multipart/form-data:
- *           schema:
- *             $ref: '#/components/schemas/CreateStory'
- *     responses:
- *       201:
- *         description: Історія створена
- */
-router.post('/', authenticate, uploadStoryImg.single('img'), celebrate(createStorySchema), createStory);
+router.get("/saved", authenticate, celebrate(getMyStoriesSchema), getSavedStories);
 
 /**
  * @swagger
  * /stories/{id}:
  *   get:
- *     summary: Отримати історію по ID
+ *     summary: Деталі однієї історії
  *     tags: [Stories]
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
- *         schema: { type: string }
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
- *         description: Деталі історії
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Story'
  */
-router.get('/:id', celebrate(getStoryByIdSchema), getStoryById);
+router.get("/:id", celebrate(getStoryByIdSchema), getStoryById);
+
+// --- РОУТИ ДЛЯ КЕРУВАННЯ ---
+
+router.post(
+  "/",
+  authenticate,
+  uploadStoryImg.single("img"),
+  celebrate(createStorySchema),
+  createStory
+);
+
+router.patch(
+  "/:id",
+  authenticate,
+  uploadStoryImg.single("img"),
+  celebrate(updateStorySchema),
+  updateStory
+);
+
+router.delete("/:id", authenticate, celebrate(getStoryByIdSchema), deleteStory);
+
+// --- РОУТИ ДЛЯ "ОБРАНОГО" ---
 
 /**
  * @swagger
- * /stories/{id}:
- *   patch:
- *     summary: Оновити історію
+ * /stories/{id}/save:
+ *   post:
+ *     summary: Додати історію до збережених
  *     tags: [Stories]
  *     security:
  *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema: { type: string }
- *     requestBody:
- *       content:
- *         multipart/form-data:
- *           schema:
- *             $ref: '#/components/schemas/UpdateStory'
  *     responses:
  *       200:
- *         description: Оновлено
+ *         description: Список ID збережених історій
  */
-router.patch('/:id', authenticate, uploadStoryImg.single('img'), celebrate(updateStorySchema), updateStory);
+router.post("/:id/save", authenticate, addToSave);
 
 /**
  * @swagger
- * /stories/{id}:
+ * /stories/{id}/save:
  *   delete:
- *     summary: Видалити історію
+ *     summary: Видалити історію зі збережених
  *     tags: [Stories]
  *     security:
  *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema: { type: string }
  *     responses:
- *       204:
- *         description: Видалено
+ *       200:
+ *         description: Оновлений список ID
  */
-router.delete('/:id', authenticate, celebrate(getStoryByIdSchema), deleteStory);
+router.delete("/:id/save", authenticate, removeFromSave);
 
 export default router;
 
