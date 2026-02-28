@@ -1,10 +1,11 @@
 import { Router } from "express";
 import { celebrate } from "celebrate";
+import { authLimiter } from '../middleware/rateLimiter.js';
 import {
   loginUserSchema,
   registerUserSchema,
   requestResetEmailSchema,
-  resetPasswordSchema
+  resetPasswordSchema,
 } from "../validations/authValidation.js";
 import {
   registerUser,
@@ -49,14 +50,12 @@ const router = Router();
  *               name: "John Doe"
  *               email: "john@example.com"
  *               avatarUrl: "https://example.com/avatar.jpg"
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
  *       409:
  *         description: Email already in use
- *       400:
- *         description: Validation error (invalid email/password)
- *       500:
- *         description: Internal server error
  */
-router.post("/register", celebrate(registerUserSchema), registerUser);
+router.post("/register", authLimiter, celebrate(registerUserSchema), registerUser);
 
 /**
  * @swagger
@@ -72,7 +71,7 @@ router.post("/register", celebrate(registerUserSchema), registerUser);
  *             $ref: '#/components/schemas/LoginUser'
  *     responses:
  *       200:
- *         description: Successful login
+ *         description: Успішний вхід. Встановлюються куки accessToken та refreshToken.
  *         content:
  *           application/json:
  *             example:
@@ -80,33 +79,25 @@ router.post("/register", celebrate(registerUserSchema), registerUser);
  *               name: "John Doe"
  *               email: "john@example.com"
  *               avatarUrl: "https://example.com/avatar.jpg"
- *               accessToken: "jwtAccessTokenHere"
- *       401:
- *         description: Invalid credentials
  *       400:
- *         description: Validation error
- *       500:
- *         description: Internal server error
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         description: Невірні облікові дані
  */
-router.post("/login", celebrate(loginUserSchema), loginUser);
+router.post("/login", authLimiter, celebrate(loginUserSchema), loginUser);
 
 /**
  * @swagger
  * /auth/refresh:
  *   post:
- *     summary: Refresh user session
+ *     summary: Оновлення сесії
+ *     description: Використовує refreshToken з кук для видачі нової пари токенів.
  *     tags: [Auth]
  *     responses:
  *       200:
- *         description: Session refreshed successfully
- *         content:
- *           application/json:
- *             example:
- *               accessToken: "newJwtAccessTokenHere"
+ *         description: Сесію оновлено
  *       401:
- *         description: Unauthorized / Refresh token invalid
- *       500:
- *         description: Internal server error
+ *         description: Refresh токен недійсний або відсутній
  */
 router.post("/refresh", refreshUserSession);
 
@@ -114,17 +105,15 @@ router.post("/refresh", refreshUserSession);
  * @swagger
  * /auth/logout:
  *   post:
- *     summary: Logout current user
+ *     summary: Вихід із системи
  *     tags: [Auth]
  *     security:
  *       - cookieAuth: []
  *     responses:
  *       204:
- *         description: Successfully logged out
+ *         description: Успішний вихід, куки очищено
  *       401:
- *         description: No active session
- *       500:
- *         description: Internal server error
+ *         description: Немає активної сесії
  */
 router.post("/logout", authenticate, logoutUser);
 
@@ -132,24 +121,22 @@ router.post("/logout", authenticate, logoutUser);
  * @swagger
  * /auth/check:
  *   get:
- *     summary: Check current user session
+ *     summary: Перевірка поточного стану сесії
+ *     description: Повертає дані користувача, якщо accessToken у куках дійсний.
  *     tags: [Auth]
  *     security:
  *       - cookieAuth: []
  *     responses:
  *       200:
- *         description: Session is valid
+ *         description: Сесія активна
  *         content:
  *           application/json:
  *             example:
  *               _id: "64f0c8a1e3b1a123456789ab"
  *               name: "John Doe"
  *               email: "john@example.com"
- *               avatarUrl: "https://example.com/avatar.jpg"
  *       401:
- *         description: No active session / Invalid session / Session expired
- *       500:
- *         description: Internal server error
+ *         description: Сесія недійсна або закінчилася
  */
 router.get("/check", authenticate, checkSession);
 
@@ -157,7 +144,7 @@ router.get("/check", authenticate, checkSession);
  * @swagger
  * /auth/request-reset-email:
  *   post:
- *     summary: Request password reset email
+ *     summary: Запит на скидання пароля
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -165,31 +152,22 @@ router.get("/check", authenticate, checkSession);
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - email
+ *             required: [email]
  *             properties:
- *               email:
- *                 type: string
- *                 example: "john@example.com"
+ *               email: { type: string, example: "user@example.com" }
  *     responses:
  *       200:
- *         description: Password reset email sent successfully
- *         content:
- *           application/json:
- *             example:
- *               message: "Password reset email sent"
+ *         description: Лист надіслано
  *       400:
- *         description: Validation error
- *       500:
- *         description: Failed to send the email
+ *         $ref: '#/components/responses/ValidationError'
  */
-router.post("/request-reset-email", celebrate(requestResetEmailSchema), requestResetEmail);
+router.post("/request-reset-email", authLimiter, celebrate(requestResetEmailSchema), requestResetEmail);
 
 /**
  * @swagger
  * /auth/reset-password:
  *   post:
- *     summary: Reset user password
+ *     summary: Встановлення нового пароля
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -197,32 +175,39 @@ router.post("/request-reset-email", celebrate(requestResetEmailSchema), requestR
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - token
- *               - password
+ *             required: [token, password]
  *             properties:
- *               token:
- *                 type: string
- *                 example: "resetTokenFromEmail"
- *               password:
- *                 type: string
- *                 example: "newSecurePassword123"
+ *               token: { type: string, example: "secret-token-from-email" }
+ *               password: { type: string, example: "newSecurePass123" }
  *     responses:
  *       200:
- *         description: Password reset successfully
- *         content:
- *           application/json:
- *             example:
- *               message: "Password has been reset"
- *       401:
- *         description: Invalid or expired token
- *       404:
- *         description: User not found
+ *         description: Пароль змінено
  *       400:
- *         description: Validation error
- *       500:
- *         description: Internal server error
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         description: Токен недійсний або прострочений
  */
 router.post("/reset-password", celebrate(resetPasswordSchema), resetPassword);
 
 export default router;
+
+/**
+ * @swagger
+ * components:
+ *   securitySchemes:
+ *     cookieAuth:
+ *       type: apiKey
+ *       in: cookie
+ *       name: accessToken
+ *   responses:
+ *     ValidationError:
+ *       description: Помилка валідації (невірний формат email, пароля тощо)
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               status: { type: integer, example: 400 }
+ *               message: { type: string, example: "Validation failed" }
+ *               error: { type: string, example: "Bad Request" }
+ */

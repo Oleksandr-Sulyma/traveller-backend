@@ -19,5 +19,5 @@ const createUploader = (sizeLimit) => multer({
   fileFilter,
 });
 
-export const uploadStoryImg = createUploader(2 * 1024 * 1024); // 2MB для історій
-export const uploadAvatar = createUploader(500 * 1024);       // 500KB для аватарок
+export const uploadStoryImg = createUploader(2 * 1024 * 1024);
+export const uploadAvatar = createUploader(500 * 1024);

@@ -6,98 +6,110 @@ import { saveFileToCloudinary } from '../utils/saveFileToCloudinary.js';
 import { uploadFileOrThrowError } from '../utils/uploadFileOrThrowError.js';
 import dayjs from 'dayjs';
 
+const formatStory = (story) => ({
+  ...story.toObject(),
+  formattedDate: dayjs(story.date).format('DD.MM.YYYY'),
+});
+
 export const getAllStories = async (req, res) => {
   const {
     page = 1,
     perPage = 10,
     category,
     author,
+    favorite,
     sortBy = 'createdAt',
     sortOrder = 'desc',
   } = req.query;
 
-  const skip = (page - 1) * perPage;
+  const pageNum = Math.max(1, Number(page));
+  const limitNum = Math.min(Math.max(1, Number(perPage)), 100);
+  const skip = (pageNum - 1) * limitNum;
 
-  let storiesQuery = Story.find();
+  let filter = {};
+  if (category) filter.category = category;
+  if (author) filter.ownerId = author;
 
-  if (category) storiesQuery = storiesQuery.where('category').equals(category);
-  if (author) storiesQuery = storiesQuery.where('ownerId').equals(author);
+  if (favorite === 'true' && req.user?._id) {
+    const user = await User.findById(req.user._id);
+    if (user && user.savedStories?.length) {
+      filter._id = { $in: user.savedStories };
+    } else {
+      return res.status(200).json({
+        page: pageNum,
+        perPage: limitNum,
+        total: 0,
+        totalPages: 0,
+        stories: [],
+      });
+    }
+  }
 
-  const [totalStories, stories] = await Promise.all([
-    storiesQuery.clone().countDocuments(),
-    storiesQuery
-      .clone()
+  const normalizedSortOrder = sortOrder.toLowerCase() === 'asc' ? 1 : -1;
+
+  const [total, stories] = await Promise.all([
+    Story.countDocuments(filter),
+    Story.find(filter)
       .skip(skip)
-      .limit(Number(perPage))
-      .sort({ [sortBy]: sortOrder === 'asc' ? 1 : -1 })
+      .limit(limitNum)
+      .sort({ [sortBy]: normalizedSortOrder })
       .populate('category', 'name')
-      .populate('ownerId', 'name avatarUrl email description'), // Populate ownerId with name, avatarUrl, email, and description
+      .populate('ownerId', 'name avatarUrl email description'), // ← твоя зміна
   ]);
 
-  const totalPages = Math.ceil(totalStories / perPage);
-
-  const formattedStories = stories.map((s) => ({
-    ...s.toObject(),
-    formattedDate: dayjs(s.date).format('DD.MM.YYYY'),
-  }));
-
   res.status(200).json({
-    page: Number(page),
-    perPage: Number(perPage),
-    totalStories,
-    totalPages,
-    stories: formattedStories,
+    page: pageNum,
+    perPage: limitNum,
+    total,
+    totalPages: Math.ceil(total / limitNum),
+    stories: stories.map(formatStory),
   });
 };
 
 export const getStoryById = async (req, res) => {
-  const { storyId } = req.params;
-
-  const story = await Story.findById(storyId)
+  const { id } = req.params;
+  const story = await Story.findById(id)
     .populate('category', 'name')
     .populate('ownerId', 'name avatarUrl');
 
   if (!story) throw createHttpError(404, 'Story not found');
 
-  res.status(200).json({
-    ...story.toObject(),
-    formattedDate: dayjs(story.date).format('DD.MM.YYYY'),
-  });
+  res.status(200).json(formatStory(story));
 };
 
-export const getMyStories = async (req, res) => {
+export const getOwnStories = async (req, res) => {
   const userId = req.user._id;
   const { page = 1, perPage = 10 } = req.query;
-  const skip = (page - 1) * perPage;
+
+  const pageNum = Math.max(1, Number(page));
+  const limitNum = Math.min(Math.max(1, Number(perPage)), 100);
+  const skip = (pageNum - 1) * limitNum;
 
   const [total, stories] = await Promise.all([
     Story.countDocuments({ ownerId: userId }),
     Story.find({ ownerId: userId })
-      .populate('category', 'name')
-      .populate('ownerId', 'name avatarUrl')
       .skip(skip)
-      .limit(Number(perPage))
-      .sort({ favoriteCount: -1, createdAt: -1 }),
+      .limit(limitNum)
+      .sort({ createdAt: -1 })
+      .populate('category', 'name')
+      .populate('ownerId', 'name avatarUrl'),
   ]);
 
-  const formattedStories = stories.map((s) => ({
-    ...s.toObject(),
-    formattedDate: dayjs(s.date).format('DD.MM.YYYY'),
-  }));
-
   res.status(200).json({
-    page: Number(page),
-    perPage: Number(perPage),
+    page: pageNum,
+    perPage: limitNum,
     total,
-    totalPages: Math.ceil(total / perPage),
-    stories: formattedStories,
+    totalPages: Math.ceil(total / limitNum),
+    stories: stories.map(formatStory),
   });
 };
 
 export const getSavedStories = async (req, res) => {
   const userId = req.user._id;
   const { page = 1, perPage = 10 } = req.query;
-  const skip = (page - 1) * perPage;
+  const pageNum = Math.max(1, Number(page));
+  const limitNum = Math.min(Math.max(1, Number(perPage)), 100);
+  const skip = (pageNum - 1) * limitNum;
 
   const user = await User.findById(userId);
   if (!user) throw createHttpError(404, 'User not found');
@@ -110,106 +122,97 @@ export const getSavedStories = async (req, res) => {
     .populate('ownerId', 'name avatarUrl')
     .sort({ createdAt: -1 })
     .skip(skip)
-    .limit(Number(perPage));
-
-  const formattedStories = stories.map((s) => ({
-    ...s.toObject(),
-    formattedDate: dayjs(s.date).format('DD.MM.YYYY'),
-  }));
+    .limit(limitNum);
 
   res.status(200).json({
-    page: Number(page),
-    perPage: Number(perPage),
+    page: pageNum,
+    perPage: limitNum,
     total,
-    totalPages: Math.ceil(total / perPage),
-    stories: formattedStories,
+    totalPages: Math.ceil(total / limitNum),
+    stories: stories.map(formatStory),
   });
 };
 
 export const addToSave = async (req, res) => {
-  const { storyId } = req.params;
+  const { id } = req.params;
   const userId = req.user._id;
 
-  const story = await Story.findById(storyId);
+  const story = await Story.findById(id);
   if (!story) throw createHttpError(404, 'Story not found');
 
-  const user = await User.findByIdAndUpdate(
-    userId,
-    { $addToSet: { savedStories: storyId } },
-    { new: true },
-  ).populate('savedStories');
+  const [updatedUser] = await Promise.all([
+    User.findByIdAndUpdate(
+      userId,
+      { $addToSet: { savedStories: id } },
+      { new: true },
+    ).populate('savedStories'),
+    Story.findByIdAndUpdate(id, { $inc: { favoriteCount: 1 } }),
+  ]);
 
-  if (!user) throw createHttpError(404, 'User not found');
-
-  res.status(200).json(user.savedStories);
+  if (!updatedUser) throw createHttpError(404, 'User not found');
+  res.status(200).json(updatedUser.savedStories);
 };
 
 export const removeFromSave = async (req, res) => {
-  const { storyId } = req.params;
+  const { id } = req.params;
   const userId = req.user._id;
 
-  const user = await User.findByIdAndUpdate(
+  const user = await User.findById(userId);
+  if (!user) throw createHttpError(404, 'User not found');
+
+  const wasSaved = user.savedStories.includes(id);
+
+  const updatedUser = await User.findByIdAndUpdate(
     userId,
-    { $pull: { savedStories: storyId } },
+    { $pull: { savedStories: id } },
     { new: true },
   ).populate('savedStories');
 
-  if (!user) throw createHttpError(404, 'User not found');
+  if (wasSaved) {
+    await Story.findByIdAndUpdate(id, { $inc: { favoriteCount: -1 } });
+  }
 
-  res.status(200).json(user.savedStories);
+  res.status(200).json(updatedUser.savedStories);
 };
 
 export const createStory = async (req, res) => {
   const { title, article, category } = req.body;
-
   const imgBuffer = req.file?.buffer;
+
   if (!imgBuffer) throw createHttpError(400, 'Image file is required');
 
   const categoryEntity = await Category.findById(category);
   if (!categoryEntity) throw createHttpError(400, 'Invalid category ID');
 
-  try {
-    const uploadedImg = await saveFileToCloudinary(imgBuffer);
-    if (!uploadedImg?.secure_url)
-      throw createHttpError(500, 'Failed to upload image');
+  const uploadedImg = await saveFileToCloudinary(imgBuffer);
+  if (!uploadedImg?.secure_url)
+    throw createHttpError(500, 'Failed to upload image');
 
-    const newStory = await Story.create({
-      title,
-      article,
-      category: categoryEntity._id,
-      img: uploadedImg.secure_url,
-      ownerId: req.user._id,
-      date: new Date().toISOString(),
-    });
+  const newStory = await Story.create({
+    title,
+    article,
+    category: categoryEntity._id,
+    img: uploadedImg.secure_url,
+    ownerId: req.user._id,
+    date: new Date().toISOString(),
+  });
 
-    res.status(201).json({
-      _id: newStory._id,
-      title: newStory.title,
-      article: newStory.article,
-      category: newStory.category,
-      ownerId: newStory.ownerId,
-      img: newStory.img,
-      date: dayjs(newStory.date).format('DD.MM.YYYY'),
-      favoriteCount: newStory.favoriteCount,
-    });
-  } catch (error) {
-    console.error('Error creating story:', error);
-    throw createHttpError(500, 'Failed to create story');
-  }
+  const populatedStory = await Story.findById(newStory._id)
+    .populate('category', 'name')
+    .populate('ownerId', 'name avatarUrl');
+
+  res.status(201).json(formatStory(populatedStory));
 };
 
 export const updateStory = async (req, res) => {
-  const { storyId } = req.params;
+  const { id } = req.params;
   const { title, article, category } = req.body;
   const imgBuffer = req.file?.buffer;
 
-  let uploadedImgUrl = imgBuffer
-    ? await uploadFileOrThrowError(imgBuffer)
-    : null;
-
-  const story = await Story.findById(storyId);
-  if (!story || story.ownerId.toString() !== req.user._id.toString()) {
-    throw createHttpError(404, 'Story not found');
+  const story = await Story.findById(id);
+  if (!story) throw createHttpError(404, 'Story not found');
+  if (story.ownerId.toString() !== req.user._id.toString()) {
+    throw createHttpError(403, 'Forbidden: You are not the owner');
   }
 
   if (category) {
@@ -220,23 +223,30 @@ export const updateStory = async (req, res) => {
 
   if (title) story.title = title.trim();
   if (article) story.article = article.trim();
-  if (uploadedImgUrl) story.img = uploadedImgUrl;
 
-  try {
-    await story.save();
-
-    res.status(200).json({
-      _id: story._id,
-      title: story.title,
-      article: story.article,
-      category: story.category,
-      img: story.img,
-      ownerId: story.ownerId,
-      date: dayjs(story.date).format('DD.MM.YYYY'),
-      favoriteCount: story.favoriteCount,
-    });
-  } catch (error) {
-    console.error('Error updating story:', error);
-    throw createHttpError(500, 'Failed to update story');
+  if (imgBuffer) {
+    const uploadedImgUrl = await uploadFileOrThrowError(imgBuffer);
+    story.img = uploadedImgUrl;
   }
+
+  await story.save();
+
+  const updatedStory = await Story.findById(id)
+    .populate('category', 'name')
+    .populate('ownerId', 'name avatarUrl');
+
+  res.status(200).json(formatStory(updatedStory));
+};
+
+export const deleteStory = async (req, res) => {
+  const { id } = req.params;
+  const story = await Story.findById(id);
+
+  if (!story) throw createHttpError(404, 'Story not found');
+  if (story.ownerId.toString() !== req.user._id.toString()) {
+    throw createHttpError(403, 'You are not allowed to delete this story');
+  }
+
+  await story.deleteOne();
+  res.status(204).send();
 };
