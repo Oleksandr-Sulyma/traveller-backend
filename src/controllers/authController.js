@@ -4,7 +4,6 @@ import jwt from "jsonwebtoken";
 import handlebars from "handlebars";
 import path from "node:path";
 import fs from "node:fs/promises";
-import { refreshSessionLogic } from "../services/sessionService.js";
 
 import { User } from "../models/user.js";
 import { Session } from "../models/session.js";
