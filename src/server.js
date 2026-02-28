@@ -23,11 +23,30 @@ import { generalLimiter } from './middleware/rateLimiter.js';
 
 const app = express();
 const PORT = process.env.PORT ?? 5000;
+const isProduction = process.env.NODE_ENV === 'production';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const publicPath = path.join(__dirname, '../public');
 
-app.use(helmet());
+// 1. ДОВІРА ПРОКСІ
+app.set('trust proxy', 1);
 
+// 2. БЕЗПЕКА (Helmet з CSP для Swagger та Cloudinary)
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+        "img-src": ["'self'", "res.cloudinary.com", "data:"],
+        "script-src": ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
+        "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      },
+    },
+  })
+);
+
+// 3. CORS
 const allowedOrigins = [
   process.env.FRONTEND_DOMAIN,
   'http://localhost:3000',
@@ -35,8 +54,7 @@ const allowedOrigins = [
 ];
 
 app.use(cors({
-  methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
-  origin: function (origin, callback) {
+  origin: (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
@@ -46,43 +64,41 @@ app.use(cors({
   credentials: true
 }));
 
+// 4. ПАРСЕРИ ТА ЛОГЕР
 app.use(logger);
 app.use(express.json({ limit: '5mb' }));
 app.use(cookieParser());
 
+// 5. СТАТИЧНІ ФАЙЛИ
+app.use('/public', express.static(publicPath));
 
-app.use('/public', express.static(path.join(__dirname, '../public')));
-
-
+// 6. SWAGGER
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
-app.get('/api-docs.json', (req, res) => {
-  res.setHeader('Content-Type', 'application/json');
-  res.send(swaggerSpec);
-});
-
 app.use(
   '/api-docs',
   swaggerUi.serve,
   swaggerUi.setup(swaggerSpec, {
     customCssUrl: '/public/swagger.css',
-    customSiteTitle: 'Travellers API',
-    explorer: true,
+    customSiteTitle: 'Travellers API Documentation',
     swaggerOptions: {
-      docExpansion: 'none',
-      operationsSorter: 'alpha',
-      tagsSorter: 'alpha',
       persistAuthorization: true,
+      docExpansion: 'none',
+      filter: true,
+      displayRequestDuration: true,
     },
   })
 );
 
+// 7. RATE LIMITER (Жорсткий у проді, лояльний у деві)
 app.use(generalLimiter);
 
+// 8. РОУТИ
 app.use('/auth', authRoutes);
 app.use('/users', userRoutes);
 app.use('/stories', storyRoutes);
 app.use('/categories', categoryRoutes);
 
+// 9. ОБРОБКА ПОМИЛОК
 app.use(notFoundHandler);
 app.use(errors());
 app.use(errorHandler);
@@ -91,11 +107,12 @@ const startServer = async () => {
   try {
     await connectMongoDB();
     app.listen(PORT, () => {
-      console.log(`🚀 Server ready on port ${PORT}`);
+      console.log(`🚀 Server ready in ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'} mode`);
+      console.log(`🔗 URL: http://localhost:${PORT}`);
       console.log(`📖 Swagger: http://localhost:${PORT}/api-docs`);
     });
   } catch (error) {
-    console.error('Failed to start server:', error);
+    console.error('💥 Critical error during startup:', error);
     process.exit(1);
   }
 };

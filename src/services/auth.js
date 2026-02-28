@@ -14,13 +14,14 @@ export const createSession = async (userId) => {
     refreshTokenValidUntil: new Date(Date.now() + ONE_DAY),
   });
 };
+
 export const setSessionCookies = (res, session) => {
   const isProd = process.env.NODE_ENV === 'production';
 
   const cookieOptions = {
     httpOnly: true,
-    secure: true,
-    sameSite: 'none',
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'lax',
   };
 
   res.cookie('accessToken', session.accessToken, {
@@ -29,16 +30,12 @@ export const setSessionCookies = (res, session) => {
   });
 
   res.cookie('refreshToken', session.refreshToken, {
-    httpOnly: true,
-    secure: isProd,
-    sameSite: isProd ? 'none' : 'lax',
+    ...cookieOptions,
     maxAge: ONE_DAY,
   });
 
-  res.cookie('sessionId', session._id, {
-    httpOnly: true,
-    secure: isProd,
-    sameSite: isProd ? 'none' : 'lax',
+  res.cookie('sessionId', session._id.toString(), {
+    ...cookieOptions,
     maxAge: ONE_DAY,
   });
 };

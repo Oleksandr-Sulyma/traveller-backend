@@ -1,4 +1,5 @@
-import { Router } from 'express';
+import { Router } from "express";
+import { celebrate } from "celebrate";
 import { authenticate } from '../middleware/authenticate.js';
 import {
   getAllStories,
@@ -11,6 +12,13 @@ import {
 } from '../controllers/storyController.js';
 
 import { uploadStoryImg } from '../middleware/multer.js';
+import {
+  getAllStoriesSchema,
+  getStoryByIdSchema,
+  createStorySchema,
+  updateStorySchema,
+  getMyStoriesSchema,
+} from '../validations/storyValidation.js';
 
 const router = Router();
 
@@ -94,7 +102,7 @@ const router = Router();
  *                       favoriteCount: 12
  *                       formattedDate: "27.02.2026"
  */
-router.get('/', getAllStories);
+router.get('/', celebrate(getAllStoriesSchema), getAllStories);
 
 /**
  * @swagger
@@ -112,7 +120,7 @@ router.get('/', getAllStories);
  *             schema:
  *               $ref: '#/components/schemas/PaginatedStories'
  */
-router.get('/own', authenticate, getOwnStories);
+router.get('/own', authenticate, celebrate(getMyStoriesSchema), getOwnStories);
 
 /**
  * @swagger
@@ -130,7 +138,7 @@ router.get('/own', authenticate, getOwnStories);
  *             schema:
  *               $ref: '#/components/schemas/PaginatedStories'
  */
-router.get('/saved', authenticate, getSavedStories);
+router.get('/saved', authenticate, celebrate(getMyStoriesSchema), getSavedStories);
 
 /**
  * @swagger
@@ -150,7 +158,7 @@ router.get('/saved', authenticate, getSavedStories);
  *       201:
  *         description: Історія створена
  */
-router.post('/', authenticate, uploadStoryImg.single('img'), createStory);
+router.post('/', authenticate, uploadStoryImg.single('img'), celebrate(createStorySchema), createStory);
 
 /**
  * @swagger
@@ -171,7 +179,7 @@ router.post('/', authenticate, uploadStoryImg.single('img'), createStory);
  *             schema:
  *               $ref: '#/components/schemas/Story'
  */
-router.get('/:id', getStoryById);
+router.get('/:id', celebrate(getStoryByIdSchema), getStoryById);
 
 /**
  * @swagger
@@ -195,7 +203,7 @@ router.get('/:id', getStoryById);
  *       200:
  *         description: Оновлено
  */
-router.patch('/:id', authenticate, uploadStoryImg.single('img'), updateStory);
+router.patch('/:id', authenticate, uploadStoryImg.single('img'), celebrate(updateStorySchema), updateStory);
 
 /**
  * @swagger
@@ -214,7 +222,7 @@ router.patch('/:id', authenticate, uploadStoryImg.single('img'), updateStory);
  *       204:
  *         description: Видалено
  */
-router.delete('/:id', authenticate, deleteStory);
+router.delete('/:id', authenticate, celebrate(getStoryByIdSchema), deleteStory);
 
 export default router;
 
@@ -225,47 +233,98 @@ export default router;
  *     Story:
  *       type: object
  *       properties:
- *         _id: { type: string }
- *         title: { type: string }
- *         article: { type: string }
- *         img: { type: string }
+ *         _id:
+ *           type: string
+ *           example: "65fb50c80ae91338641121f5"
+ *         title:
+ *           type: string
+ *           example: "Подорож до Карпат"
+ *         article:
+ *           type: string
+ *           maxLength: 2500
+ *         img:
+ *           type: string
+ *           format: uri
  *         category:
  *           type: object
  *           properties:
- *             _id: { type: string }
- *             name: { type: string }
+ *             _id:
+ *               type: string
+ *             name:
+ *               type: string
  *         ownerId:
  *           type: object
  *           properties:
- *             _id: { type: string }
- *             name: { type: string }
- *             avatarUrl: { type: string }
- *         favoriteCount: { type: integer }
- *         formattedDate: { type: string, example: "27.02.2026" }
+ *             _id:
+ *               type: string
+ *             name:
+ *               type: string
+ *             avatarUrl:
+ *               type: string
+ *         favoriteCount:
+ *           type: integer
+ *           default: 0
+ *         formattedDate:
+ *           type: string
+ *           example: "27.02.2026"
+ *
  *     CreateStory:
  *       type: object
- *       required: [title, article, img, category]
+ *       required:
+ *         - title
+ *         - article
+ *         - img
+ *         - category
  *       properties:
- *         title: { type: string }
- *         article: { type: string }
- *         img: { type: string, format: binary }
- *         category: { type: string, description: "ID категорії" }
+ *         title:
+ *           type: string
+ *           minLength: 3
+ *           maxLength: 80
+ *         article:
+ *           type: string
+ *           minLength: 10
+ *           maxLength: 2500
+ *         img:
+ *           type: string
+ *           format: binary
+ *         category:
+ *           type: string
+ *           description: ID категорії
+ *
  *     UpdateStory:
  *       type: object
  *       properties:
- *         title: { type: string }
- *         article: { type: string }
- *         img: { type: string, format: binary }
- *         category: { type: string }
+ *         title:
+ *           type: string
+ *           minLength: 3
+ *           maxLength: 80
+ *         article:
+ *           type: string
+ *           minLength: 10
+ *           maxLength: 2500
+ *         img:
+ *           type: string
+ *           format: binary
+ *         category:
+ *           type: string
+ *
  *     PaginatedStories:
  *       type: object
  *       properties:
+ *         page:
+ *           type: integer
+ *           example: 1
+ *         perPage:
+ *           type: integer
+ *           example: 10
+ *         total:
+ *           type: integer
+ *           example: 42
+ *         totalPages:
+ *           type: integer
+ *           example: 5
  *         stories:
  *           type: array
  *           items:
  *             $ref: '#/components/schemas/Story'
- *         page: { type: integer }
- *         perPage: { type: integer }
- *         total: { type: integer }
- *         totalPages: { type: integer }
  */
