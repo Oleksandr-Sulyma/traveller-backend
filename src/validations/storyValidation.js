@@ -1,4 +1,5 @@
 import { Joi, Segments } from 'celebrate';
+import { Category } from '../models/category.js';
 
 // Спільна схема для валідації MongoDB ID
 const objectIdSchema = Joi.string().hex().length(24);
