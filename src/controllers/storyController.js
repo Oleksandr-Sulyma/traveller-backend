@@ -54,7 +54,7 @@ export const getAllStories = async (req, res) => {
       .limit(limitNum)
       .sort({ [sortBy]: normalizedSortOrder })
       .populate('category', 'name')
-      .populate('ownerId', 'name avatarUrl email description'), // ← твоя зміна
+      .populate('ownerId', 'name avatarUrl email description'), // популяція для карток історій
   ]);
 
   res.status(200).json({
