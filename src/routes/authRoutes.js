@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { celebrate } from "celebrate";
-import { authLimiter } from '../middleware/rateLimiter.js';
+import { authLimiter } from "../middleware/rateLimiter.js";
 import {
   loginUserSchema,
   registerUserSchema,
@@ -24,15 +24,14 @@ const router = Router();
  * @swagger
  * tags:
  *   - name: Auth
- *     description: User authentication and session management
+ *     description: Керування автентифікацією та сесіями користувачів
  */
 
 /**
  * @swagger
  * /auth/register:
  *   post:
- *     summary: Register a new user
- *     description: Creates a new account and automatically sets session cookies.
+ *     summary: Реєстрація нового користувача
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -42,18 +41,15 @@ const router = Router();
  *             $ref: '#/components/schemas/RegisterUser'
  *     responses:
  *       201:
- *         description: User successfully registered
+ *         description: Успішно зареєстровано
  *         content:
  *           application/json:
- *             example:
- *               _id: "64f0c8a1e3b1a123456789ab"
- *               name: "John Doe"
- *               email: "john@example.com"
- *               avatarUrl: "https://example.com/avatar.jpg"
+ *             schema:
+ *               $ref: '#/components/schemas/User'
  *       400:
  *         $ref: '#/components/responses/ValidationError'
  *       409:
- *         description: Email already in use
+ *         description: Email уже використовується
  */
 router.post("/register", authLimiter, celebrate(registerUserSchema), registerUser);
 
@@ -61,7 +57,7 @@ router.post("/register", authLimiter, celebrate(registerUserSchema), registerUse
  * @swagger
  * /auth/login:
  *   post:
- *     summary: Log in to the system
+ *     summary: Вхід у систему
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -74,13 +70,8 @@ router.post("/register", authLimiter, celebrate(registerUserSchema), registerUse
  *         description: Успішний вхід. Встановлюються куки accessToken та refreshToken.
  *         content:
  *           application/json:
- *             example:
- *               _id: "64f0c8a1e3b1a123456789ab"
- *               name: "John Doe"
- *               email: "john@example.com"
- *               avatarUrl: "https://example.com/avatar.jpg"
- *       400:
- *         $ref: '#/components/responses/ValidationError'
+ *             schema:
+ *               $ref: '#/components/schemas/User'
  *       401:
  *         description: Невірні облікові дані
  */
@@ -97,7 +88,7 @@ router.post("/login", authLimiter, celebrate(loginUserSchema), loginUser);
  *       200:
  *         description: Сесію оновлено
  *       401:
- *         description: Refresh токен недійсний або відсутній
+ *         description: Refresh токен недійсний
  */
 router.post("/refresh", refreshUserSession);
 
@@ -111,9 +102,7 @@ router.post("/refresh", refreshUserSession);
  *       - cookieAuth: []
  *     responses:
  *       204:
- *         description: Успішний вихід, куки очищено
- *       401:
- *         description: Немає активної сесії
+ *         description: Куки очищено
  */
 router.post("/logout", authenticate, logoutUser);
 
@@ -122,7 +111,6 @@ router.post("/logout", authenticate, logoutUser);
  * /auth/check:
  *   get:
  *     summary: Перевірка поточного стану сесії
- *     description: Повертає дані користувача, якщо accessToken у куках дійсний.
  *     tags: [Auth]
  *     security:
  *       - cookieAuth: []
@@ -131,12 +119,8 @@ router.post("/logout", authenticate, logoutUser);
  *         description: Сесія активна
  *         content:
  *           application/json:
- *             example:
- *               _id: "64f0c8a1e3b1a123456789ab"
- *               name: "John Doe"
- *               email: "john@example.com"
- *       401:
- *         description: Сесія недійсна або закінчилася
+ *             schema:
+ *               $ref: '#/components/schemas/User'
  */
 router.get("/check", authenticate, checkSession);
 
@@ -152,16 +136,23 @@ router.get("/check", authenticate, checkSession);
  *         application/json:
  *           schema:
  *             type: object
- *             required: [email]
+ *             required:
+ *               - email
  *             properties:
- *               email: { type: string, example: "user@example.com" }
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: "user@example.com"
  *     responses:
  *       200:
  *         description: Лист надіслано
- *       400:
- *         $ref: '#/components/responses/ValidationError'
  */
-router.post("/request-reset-email", authLimiter, celebrate(requestResetEmailSchema), requestResetEmail);
+router.post(
+  "/request-reset-email",
+  authLimiter,
+  celebrate(requestResetEmailSchema),
+  requestResetEmail
+);
 
 /**
  * @swagger
@@ -175,17 +166,19 @@ router.post("/request-reset-email", authLimiter, celebrate(requestResetEmailSche
  *         application/json:
  *           schema:
  *             type: object
- *             required: [token, password]
+ *             required:
+ *               - token
+ *               - password
  *             properties:
- *               token: { type: string, example: "secret-token-from-email" }
- *               password: { type: string, example: "newSecurePass123" }
+ *               token:
+ *                 type: string
+ *                 example: "secret-token"
+ *               password:
+ *                 type: string
+ *                 example: "newSecurePass123"
  *     responses:
  *       200:
  *         description: Пароль змінено
- *       400:
- *         $ref: '#/components/responses/ValidationError'
- *       401:
- *         description: Токен недійсний або прострочений
  */
 router.post("/reset-password", celebrate(resetPasswordSchema), resetPassword);
 
@@ -199,15 +192,67 @@ export default router;
  *       type: apiKey
  *       in: cookie
  *       name: accessToken
+ *   schemas:
+ *     User:
+ *       type: object
+ *       properties:
+ *         _id:
+ *           type: string
+ *           example: "64f0c8a1e3b1a123456789ab"
+ *         name:
+ *           type: string
+ *           example: "John Doe"
+ *         email:
+ *           type: string
+ *           example: "john@example.com"
+ *         avatarUrl:
+ *           type: string
+ *           example: "https://example.com/avatar.jpg"
+ *
+ *     RegisterUser:
+ *       type: object
+ *       required:
+ *         - name
+ *         - email
+ *         - password
+ *       properties:
+ *         name:
+ *           type: string
+ *           minLength: 2
+ *           maxLength: 32
+ *         email:
+ *           type: string
+ *           format: email
+ *         password:
+ *           type: string
+ *           format: password
+ *           minLength: 8
+ *
+ *     LoginUser:
+ *       type: object
+ *       required:
+ *         - email
+ *         - password
+ *       properties:
+ *         email:
+ *           type: string
+ *           format: email
+ *         password:
+ *           type: string
+ *           format: password
+ *
  *   responses:
  *     ValidationError:
- *       description: Помилка валідації (невірний формат email, пароля тощо)
+ *       description: Помилка валідації
  *       content:
  *         application/json:
  *           schema:
  *             type: object
  *             properties:
- *               status: { type: integer, example: 400 }
- *               message: { type: string, example: "Validation failed" }
- *               error: { type: string, example: "Bad Request" }
+ *               status:
+ *                 type: integer
+ *                 example: 400
+ *               message:
+ *                 type: string
+ *                 example: "Validation failed"
  */

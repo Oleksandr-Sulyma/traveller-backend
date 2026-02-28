@@ -1,4 +1,3 @@
-// categoryRouter.js
 import { Router } from "express";
 import { getAllCategories } from "../controllers/categoryController.js";
 
@@ -8,8 +7,31 @@ const router = Router();
  * @swagger
  * tags:
  *   - name: Categories
- *     description: Manage story categories
+ *     description: Керування категоріями історій
  */
+
+/**
+ * @swagger
+ * /categories:
+ *   get:
+ *     summary: Отримати всі категорії
+ *     tags: [Categories]
+ *     description: Повертає повний список доступних категорій для історій.
+ *     responses:
+ *       200:
+ *         description: Список категорій успішно отримано
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Category'
+ *       500:
+ *         description: Помилка сервера при отриманні категорій
+ */
+router.get("/", getAllCategories);
+
+export default router;
 
 /**
  * @swagger
@@ -24,39 +46,9 @@ const router = Router();
  *         _id:
  *           type: string
  *           example: "65fb50c80ae91338641121f0"
- *           description: Unique category ID
+ *           description: Унікальний ID категорії
  *         name:
  *           type: string
  *           example: "Travel"
- *           description: Category name
+ *           description: Назва категорії
  */
-
-/**
- * @swagger
- * /categories:
- *   get:
- *     summary: Get all categories
- *     tags: [Categories]
- *     description: Returns a list of all story categories.
- *     responses:
- *       200:
- *         description: Successfully fetched categories
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Category'
- *             example:
- *               - _id: "65fb50c80ae91338641121f0"
- *                 name: "Travel"
- *               - _id: "65fb50c80ae91338641121f1"
- *                 name: "Science"
- *               - _id: "65fb50c80ae91338641121f2"
- *                 name: "Lifestyle"
- *       500:
- *         description: Failed to fetch categories
- */
-router.get("/", getAllCategories);
-
-export default router;

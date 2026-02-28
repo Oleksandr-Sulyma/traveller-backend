@@ -115,3 +115,26 @@
   padding: 8px;
   margin-bottom: 4px;
 }
+
+.swagger-ui code,
+.swagger-ui pre,
+.swagger-ui pre *,
+.swagger-ui .model-box code {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-shadow: none !important; /* Прибираємо тіні, які створюють ефект розмиття */
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+}
+
+.swagger-ui .opblock-description-wrapper code,
+.swagger-ui .description code {
+  background-color: rgba(59, 130, 246, 0.1) !important;
+  padding: 2px 4px !important;
+  border-radius: 4px !important;
+  border: none !important;
+  font-weight: 600 !important;
+}
+
+.swagger-ui pre {
+  box-shadow: none !important;
+}

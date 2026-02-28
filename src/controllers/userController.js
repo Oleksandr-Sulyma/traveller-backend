@@ -2,6 +2,7 @@ import createHttpError from 'http-errors';
 import { User } from '../models/user.js';
 import { Story } from '../models/story.js';
 import { uploadFileOrThrowError } from '../utils/uploadFileOrThrowError.js';
+import mongoose from 'mongoose';
 
 export const getAllUsers = async (req, res) => {
   const { page = 1, perPage = 10 } = req.query;
