@@ -6,10 +6,25 @@ import { saveFileToCloudinary } from '../utils/saveFileToCloudinary.js';
 import { uploadFileOrThrowError } from '../utils/uploadFileOrThrowError.js';
 import dayjs from 'dayjs';
 
-const formatStory = (story) => ({
-  ...story.toObject(),
+const formatStory = (storyObject) => {
+  const { _id: id, __v, ownerId,  ...story } = storyObject.toObject();
+
+  return({
+  ...story,
+  id,
+  ...(story.category ? { category: { id: story.category._id, name: story.category.name } } : {}),
+  ...(ownerId
+    ? {
+        owner: {
+          id: ownerId._id,
+          name: ownerId.name,
+          avatarUrl: ownerId.avatarUrl,
+        },
+      }
+    : {}),
   formattedDate: dayjs(story.date).format('DD.MM.YYYY'),
-});
+})
+};
 
 export const getAllStories = async (req, res) => {
   const {
