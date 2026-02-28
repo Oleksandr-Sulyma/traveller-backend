@@ -1,15 +1,14 @@
-import createHttpError from "http-errors";
-import { Story } from "../models/story.js";
-import { User } from "../models/user.js";
-import { Category } from "../models/category.js";
-import { saveFileToCloudinary } from "../utils/saveFileToCloudinary.js";
-import { uploadFileOrThrowError } from "../utils/uploadFileOrThrowError.js";
-import dayjs from "dayjs";
+import createHttpError from 'http-errors';
+import { Story } from '../models/story.js';
+import { User } from '../models/user.js';
+import { Category } from '../models/category.js';
+import { saveFileToCloudinary } from '../utils/saveFileToCloudinary.js';
+import { uploadFileOrThrowError } from '../utils/uploadFileOrThrowError.js';
+import dayjs from 'dayjs';
 
-// Допоміжна функція для форматування відповіді (щоб не дублювати код)
 const formatStory = (story) => ({
   ...story.toObject(),
-  formattedDate: dayjs(story.date).format("DD.MM.YYYY"),
+  formattedDate: dayjs(story.date).format('DD.MM.YYYY'),
 });
 
 export const getAllStories = async (req, res) => {
@@ -19,8 +18,8 @@ export const getAllStories = async (req, res) => {
     category,
     author,
     favorite,
-    sortBy = "createdAt",
-    sortOrder = "desc",
+    sortBy = 'createdAt',
+    sortOrder = 'desc',
   } = req.query;
 
   const pageNum = Math.max(1, Number(page));
@@ -31,7 +30,7 @@ export const getAllStories = async (req, res) => {
   if (category) filter.category = category;
   if (author) filter.ownerId = author;
 
-  if (favorite === "true" && req.user?._id) {
+  if (favorite === 'true' && req.user?._id) {
     const user = await User.findById(req.user._id);
     if (user && user.savedStories?.length) {
       filter._id = { $in: user.savedStories };
@@ -46,7 +45,7 @@ export const getAllStories = async (req, res) => {
     }
   }
 
-  const normalizedSortOrder = sortOrder.toLowerCase() === "asc" ? 1 : -1;
+  const normalizedSortOrder = sortOrder.toLowerCase() === 'asc' ? 1 : -1;
 
   const [total, stories] = await Promise.all([
     Story.countDocuments(filter),
@@ -54,8 +53,8 @@ export const getAllStories = async (req, res) => {
       .skip(skip)
       .limit(limitNum)
       .sort({ [sortBy]: normalizedSortOrder })
-      .populate("category", "name")
-      .populate("ownerId", "name avatarUrl"),
+      .populate('category', 'name')
+      .populate('ownerId', 'name avatarUrl email description'), // популяція для карток історій
   ]);
 
   res.status(200).json({
@@ -70,10 +69,10 @@ export const getAllStories = async (req, res) => {
 export const getStoryById = async (req, res) => {
   const { id } = req.params;
   const story = await Story.findById(id)
-    .populate("category", "name")
-    .populate("ownerId", "name avatarUrl");
+    .populate('category', 'name')
+    .populate('ownerId', 'name avatarUrl');
 
-  if (!story) throw createHttpError(404, "Story not found");
+  if (!story) throw createHttpError(404, 'Story not found');
 
   res.status(200).json(formatStory(story));
 };
@@ -91,9 +90,9 @@ export const getOwnStories = async (req, res) => {
     Story.find({ ownerId: userId })
       .skip(skip)
       .limit(limitNum)
-      .sort({ createdAt: -1 }) // Сортування від нових до старих
-      .populate("category", "name")
-      .populate("ownerId", "name avatarUrl"),
+      .sort({ createdAt: -1 })
+      .populate('category', 'name')
+      .populate('ownerId', 'name avatarUrl'),
   ]);
 
   res.status(200).json({
@@ -113,14 +112,14 @@ export const getSavedStories = async (req, res) => {
   const skip = (pageNum - 1) * limitNum;
 
   const user = await User.findById(userId);
-  if (!user) throw createHttpError(404, "User not found");
+  if (!user) throw createHttpError(404, 'User not found');
 
   const savedIds = user.savedStories || [];
   const total = savedIds.length;
 
   const stories = await Story.find({ _id: { $in: savedIds } })
-    .populate("category", "name")
-    .populate("ownerId", "name avatarUrl")
+    .populate('category', 'name')
+    .populate('ownerId', 'name avatarUrl')
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limitNum);
@@ -139,18 +138,18 @@ export const addToSave = async (req, res) => {
   const userId = req.user._id;
 
   const story = await Story.findById(id);
-  if (!story) throw createHttpError(404, "Story not found");
+  if (!story) throw createHttpError(404, 'Story not found');
 
   const [updatedUser] = await Promise.all([
     User.findByIdAndUpdate(
       userId,
       { $addToSet: { savedStories: id } },
-      { new: true }
-    ).populate("savedStories"),
-    Story.findByIdAndUpdate(id, { $inc: { favoriteCount: 1 } })
+      { new: true },
+    ).populate('savedStories'),
+    Story.findByIdAndUpdate(id, { $inc: { favoriteCount: 1 } }),
   ]);
 
-  if (!updatedUser) throw createHttpError(404, "User not found");
+  if (!updatedUser) throw createHttpError(404, 'User not found');
   res.status(200).json(updatedUser.savedStories);
 };
 
@@ -159,15 +158,15 @@ export const removeFromSave = async (req, res) => {
   const userId = req.user._id;
 
   const user = await User.findById(userId);
-  if (!user) throw createHttpError(404, "User not found");
+  if (!user) throw createHttpError(404, 'User not found');
 
   const wasSaved = user.savedStories.includes(id);
 
   const updatedUser = await User.findByIdAndUpdate(
     userId,
     { $pull: { savedStories: id } },
-    { new: true }
-  ).populate("savedStories");
+    { new: true },
+  ).populate('savedStories');
 
   if (wasSaved) {
     await Story.findByIdAndUpdate(id, { $inc: { favoriteCount: -1 } });
@@ -180,13 +179,14 @@ export const createStory = async (req, res) => {
   const { title, article, category } = req.body;
   const imgBuffer = req.file?.buffer;
 
-  if (!imgBuffer) throw createHttpError(400, "Image file is required");
+  if (!imgBuffer) throw createHttpError(400, 'Image file is required');
 
   const categoryEntity = await Category.findById(category);
-  if (!categoryEntity) throw createHttpError(400, "Invalid category ID");
+  if (!categoryEntity) throw createHttpError(400, 'Invalid category ID');
 
   const uploadedImg = await saveFileToCloudinary(imgBuffer);
-  if (!uploadedImg?.secure_url) throw createHttpError(500, "Failed to upload image");
+  if (!uploadedImg?.secure_url)
+    throw createHttpError(500, 'Failed to upload image');
 
   const newStory = await Story.create({
     title,
@@ -198,8 +198,8 @@ export const createStory = async (req, res) => {
   });
 
   const populatedStory = await Story.findById(newStory._id)
-    .populate("category", "name")
-    .populate("ownerId", "name avatarUrl");
+    .populate('category', 'name')
+    .populate('ownerId', 'name avatarUrl');
 
   res.status(201).json(formatStory(populatedStory));
 };
@@ -210,14 +210,14 @@ export const updateStory = async (req, res) => {
   const imgBuffer = req.file?.buffer;
 
   const story = await Story.findById(id);
-  if (!story) throw createHttpError(404, "Story not found");
+  if (!story) throw createHttpError(404, 'Story not found');
   if (story.ownerId.toString() !== req.user._id.toString()) {
-    throw createHttpError(403, "Forbidden: You are not the owner");
+    throw createHttpError(403, 'Forbidden: You are not the owner');
   }
 
   if (category) {
     const categoryEntity = await Category.findById(category);
-    if (!categoryEntity) throw createHttpError(400, "Invalid category");
+    if (!categoryEntity) throw createHttpError(400, 'Invalid category');
     story.category = categoryEntity._id;
   }
 
@@ -232,8 +232,8 @@ export const updateStory = async (req, res) => {
   await story.save();
 
   const updatedStory = await Story.findById(id)
-    .populate("category", "name")
-    .populate("ownerId", "name avatarUrl");
+    .populate('category', 'name')
+    .populate('ownerId', 'name avatarUrl');
 
   res.status(200).json(formatStory(updatedStory));
 };
@@ -242,9 +242,9 @@ export const deleteStory = async (req, res) => {
   const { id } = req.params;
   const story = await Story.findById(id);
 
-  if (!story) throw createHttpError(404, "Story not found");
+  if (!story) throw createHttpError(404, 'Story not found');
   if (story.ownerId.toString() !== req.user._id.toString()) {
-    throw createHttpError(403, "You are not allowed to delete this story");
+    throw createHttpError(403, 'You are not allowed to delete this story');
   }
 
   await story.deleteOne();
