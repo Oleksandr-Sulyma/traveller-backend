@@ -1,6 +1,6 @@
 import { Session } from '../models/session.js';
 import createHttpError from 'http-errors';
-import { createSession } from './AuthServices.js';
+import { createSession } from "../services/auth.js";
 
 export const refreshSessionLogic = async (sessionId, refreshToken) => {
   const session = await Session.findOne({
