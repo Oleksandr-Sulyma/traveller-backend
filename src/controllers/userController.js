@@ -2,6 +2,7 @@ import createHttpError from 'http-errors';
 import { User } from '../models/user.js';
 import { Story } from '../models/story.js';
 import { uploadFileOrThrowError } from '../utils/uploadFileOrThrowError.js';
+import mongoose from 'mongoose';
 
 export const getAllUsers = async (req, res) => {
   const { page = 1, perPage = 10 } = req.query;
@@ -30,11 +31,6 @@ export const getAllUsers = async (req, res) => {
 
 export const getUserById = async (req, res) => {
   const { id } = req.params;
-
-  if (!id.match(/^[0-9a-fA-F]{24}$/)) {
-    throw createHttpError(400, 'Invalid user ID');
-  }
-
   const { page = 1, perPage = 10 } = req.query;
   const pageNum = Number(page);
   const perPageNum = Number(perPage);

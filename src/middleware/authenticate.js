@@ -1,38 +1,30 @@
-// src/middleware/authenticate.js
-
 import createHttpError from 'http-errors';
 import { Session } from '../models/session.js';
 import { User } from '../models/user.js';
 
 export const authenticate = async (req, res, next) => {
-  console.log('Authenticating user...');
+  const { accessToken } = req.cookies;
 
-  if (!req.cookies.accessToken) {
+  if (!accessToken) {
     throw createHttpError(401, 'Missing access token');
   }
 
-  const session = await Session.findOne({
-    accessToken: req.cookies.accessToken,
-  });
+  const session = await Session.findOne({ accessToken }).populate('userId');
 
   if (!session) {
     throw createHttpError(401, 'Session not found');
   }
 
-  const isAccessTokenExpired =
-    new Date() > new Date(session.accessTokenValidUntil);
-
-  if (isAccessTokenExpired) {
+  if (new Date() > session.accessTokenValidUntil) {
     throw createHttpError(401, 'Access token expired');
   }
 
-  const user = await User.findById(session.userId);
-
-  if (!user) {
-    throw createHttpError(401);
+  if (!session.userId) {
+    throw createHttpError(401, 'User associated with session not found');
   }
 
-  req.user = user;
+  req.user = session.userId;
+  req.session = session;
 
   next();
 };
