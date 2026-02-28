@@ -83,7 +83,7 @@ const router = Router();
  *             schema:
  *               $ref: '#/components/schemas/PaginatedStories'
  */
-router.get("/", authenticate, celebrate(getAllStoriesSchema), getAllStories);
+router.get("/", celebrate(getAllStoriesSchema), getAllStories);
 
 /**
  * @swagger
