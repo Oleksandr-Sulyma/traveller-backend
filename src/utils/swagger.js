@@ -17,8 +17,8 @@ export const swaggerOptions = {
     },
     servers: [
       {
-        url: process.env.API_URL || 'http://localhost:5000',
-        description: 'Головний сервер',
+        url: (process.env.API_URL || 'http://localhost:5000') + '/api',
+        description: 'Головний сервер (префікс /api)',
       },
     ],
     components: {

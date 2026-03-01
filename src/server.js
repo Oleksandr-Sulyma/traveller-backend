@@ -14,14 +14,14 @@ import { logger } from './middleware/logger.js';
 import { notFoundHandler } from './middleware/notFoundHandler.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
-import authRoutes from './routes/authRoutes.js';
-import userRoutes from './routes/userRoutes.js';
-import storyRoutes from './routes/storyRoutes.js';
-import categoryRoutes from './routes/categoryRoutes.js';
+
 import { swaggerOptions } from './utils/swagger.js';
 import { generalLimiter } from './middleware/rateLimiter.js';
+import { router } from './routes/router.js';
 
 const app = express();
+
+
 const PORT = process.env.PORT ?? 5000;
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -92,11 +92,9 @@ app.use(
 // 7. RATE LIMITER (Жорсткий у проді, лояльний у деві)
 app.use(generalLimiter);
 
-// 8. РОУТИ
-app.use('/auth', authRoutes);
-app.use('/users', userRoutes);
-app.use('/stories', storyRoutes);
-app.use('/categories', categoryRoutes);
+// 8. РОУТИ (префікс /api для всього API)
+app.use('/api', router);
+
 
 // 9. ОБРОБКА ПОМИЛОК
 app.use(notFoundHandler);
