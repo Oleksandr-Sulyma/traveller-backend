@@ -32,8 +32,8 @@ name: 'sessionId',
 },
 },
 apis: [
-path.join(__dirname, '../routes/.js'),
-path.join(__dirname, '../models/.js'),
-path.join(__dirname, './swaggerSchemas.js'),
+ path.join(__dirname, '../routes/*.js'),
+  path.join(__dirname, '../models/*.js'),
+  path.join(__dirname, './swaggerSchemas.js'),
 ],
 };
