@@ -18,8 +18,6 @@ export const generalLimiter = rateLimit({
   legacyHeaders: false,
 
   skipFailedRequests: !isProduction,
-
-  trustProxy: true,
 });
 
 
