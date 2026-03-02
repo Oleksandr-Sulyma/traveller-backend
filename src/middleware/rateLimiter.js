@@ -18,8 +18,9 @@ export const generalLimiter = rateLimit({
   legacyHeaders: false,
 
   skipFailedRequests: !isProduction,
-});
 
+  trustProxy: true,
+});
 
 export const authLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 година
