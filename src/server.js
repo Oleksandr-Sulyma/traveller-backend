@@ -14,10 +14,10 @@ import { logger } from './middleware/logger.js';
 import { notFoundHandler } from './middleware/notFoundHandler.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
-import authRoutes from './routers/authRouter.js';
-import userRoutes from './routers/userRouter.js';
-import storyRoutes from './routers/storyRouter.js';
-import categoryRoutes from './routers/categoryRouter.js';
+import authRouter from './routers/authRouter.js';
+import userRouter from './routers/userRouter.js';
+import storyRouter from './routers/storyRouter.js';
+import categoryRouter from './routers/categoryRouter.js';
 import { swaggerOptions } from './utils/swagger.js';
 import { generalLimiter } from './middleware/rateLimiter.js';
 
@@ -100,10 +100,10 @@ displayRequestDuration: true,
 app.use(generalLimiter);
 
 // 8. РОУТИ
-app.use('/auth', authRoutes);
-app.use('/users', userRoutes);
-app.use('/stories', storyRoutes);
-app.use('/categories', categoryRoutes);
+app.use('/auth', authRouter);
+app.use('/users', userRouter);
+app.use('/stories', storyRouter);
+app.use('/categories', categoryRouter);
 
 // 9. ОБРОБКА ПОМИЛОК
 app.use(notFoundHandler);
