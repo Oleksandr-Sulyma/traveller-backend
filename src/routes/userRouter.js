@@ -253,3 +253,37 @@ router.patch(
 router.get('/:id', celebrate(getUserStoriesSchema), getUserById);
 
 export default router;
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     User:
+ *       type: object
+ *       properties:
+ *         _id:
+ *           type: string
+ *           example: "64f0c8a1e3b1a123456789ab"
+ *           description: Unique identifier for the user
+ *         name:
+ *           type: string
+ *           example: "John Doe"
+ *           description: Full name of the user
+ *         email:
+ *           type: string
+ *           format: email
+ *           example: "john@example.com"
+ *           description: User's email address
+ *         avatarUrl:
+ *           type: string
+ *           example: "https://example.com/avatar.jpg"
+ *           description: URL of the user's avatar image
+ *         description:
+ *           type: string
+ *           example: "I love hiking and mountains."
+ *           description: Short bio or description of the user
+ *         articlesAmount:
+ *           type: integer
+ *           example: 5
+ *           description: Total number of stories published by the user
+ */
