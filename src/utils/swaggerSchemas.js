@@ -45,6 +45,7 @@
  *           type: string
  *         name:
  *           type: string
+<<<<<<< HEAD
  *
  *     RegisterUser:
  *       type: object
@@ -88,4 +89,6 @@
  *         email:
  *           type: string
  *           format: email
+=======
+>>>>>>> 8b9aa3f (fix all routs)
  */

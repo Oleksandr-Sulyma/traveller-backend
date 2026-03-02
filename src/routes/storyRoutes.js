@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { celebrate } from "celebrate";
-import { authenticate } from "../middleware/authenticate.js";
+import { authenticate } from '../middleware/authenticate.js';
 import {
   getAllStories,
   getStoryById,
@@ -11,16 +11,17 @@ import {
   getSavedStories,
   addToSave,
   removeFromSave,
-} from "../controllers/storyController.js";
+} from '../controllers/storyController.js';
 
-import { uploadStoryImg } from "../middleware/multer.js";
+import { uploadStoryImg } from '../middleware/multer.js';
 import {
   getAllStoriesSchema,
   getStoryByIdSchema,
   createStorySchema,
   updateStorySchema,
   getMyStoriesSchema,
-} from "../validations/storyValidation.js";
+} from '../validations/storyValidation.js';
+
 
 const router = Router();
 
@@ -83,7 +84,7 @@ const router = Router();
  *             schema:
  *               $ref: '#/components/schemas/PaginatedStories'
  */
-router.get("/", celebrate(getAllStoriesSchema), getAllStories);
+router.get('/', celebrate(getAllStoriesSchema), getAllStories);
 
 /**
  * @swagger
@@ -100,7 +101,7 @@ router.get("/", celebrate(getAllStoriesSchema), getAllStories);
  *             schema:
  *               $ref: '#/components/schemas/PaginatedStories'
  */
-router.get("/own", authenticate, celebrate(getMyStoriesSchema), getOwnStories);
+router.get('/own', authenticate, celebrate(getMyStoriesSchema), getOwnStories);
 
 /**
  * @swagger
@@ -117,11 +118,16 @@ router.get("/own", authenticate, celebrate(getMyStoriesSchema), getOwnStories);
  *             schema:
  *               $ref: '#/components/schemas/PaginatedStories'
  */
-router.get("/saved", authenticate, celebrate(getMyStoriesSchema), getSavedStories);
+router.get(
+  '/saved',
+  authenticate,
+  celebrate(getMyStoriesSchema),
+  getSavedStories,
+);
 
 /**
  * @swagger
- * /stories/{id}:
+ * /stories/{storyId}:
  *   get:
  *     summary: Деталі однієї історії
  *     tags: [Stories]
@@ -138,33 +144,38 @@ router.get("/saved", authenticate, celebrate(getMyStoriesSchema), getSavedStorie
  *             schema:
  *               $ref: '#/components/schemas/Story'
  */
-router.get("/:id", celebrate(getStoryByIdSchema), getStoryById);
+router.get('/:id', celebrate(getStoryByIdSchema), getStoryById);
 
 // --- РОУТИ ДЛЯ КЕРУВАННЯ ---
 
 router.post(
-  "/",
+  '/',
   authenticate,
-  uploadStoryImg.single("img"),
+  uploadStoryImg.single('img'),
   celebrate(createStorySchema),
-  createStory
+  createStory,
 );
 
 router.patch(
-  "/:id",
+  '/:id',
   authenticate,
-  uploadStoryImg.single("img"),
+  uploadStoryImg.single('img'),
   celebrate(updateStorySchema),
-  updateStory
+  updateStory,
 );
 
-router.delete("/:id", authenticate, celebrate(getStoryByIdSchema), deleteStory);
+router.delete(
+  '/:id',
+  authenticate,
+  celebrate(getStoryByIdSchema),
+  deleteStory,
+);
 
 // --- РОУТИ ДЛЯ "ОБРАНОГО" ---
 
 /**
  * @swagger
- * /stories/{id}/save:
+ * /stories/{storyId}/save:
  *   post:
  *     summary: Додати історію до збережених
  *     tags: [Stories]
@@ -174,11 +185,11 @@ router.delete("/:id", authenticate, celebrate(getStoryByIdSchema), deleteStory);
  *       200:
  *         description: Список ID збережених історій
  */
-router.post("/:id/save", authenticate, addToSave);
+router.post('/:id/save', authenticate, addToSave);
 
 /**
  * @swagger
- * /stories/{id}/save:
+ * /stories/{storyId}/save:
  *   delete:
  *     summary: Видалити історію зі збережених
  *     tags: [Stories]
@@ -188,7 +199,7 @@ router.post("/:id/save", authenticate, addToSave);
  *       200:
  *         description: Оновлений список ID
  */
-router.delete("/:id/save", authenticate, removeFromSave);
+router.delete('/:id/save', authenticate, removeFromSave);
 
 export default router;
 

@@ -6,26 +6,29 @@ import { saveFileToCloudinary } from '../utils/saveFileToCloudinary.js';
 import { uploadFileOrThrowError } from '../utils/uploadFileOrThrowError.js';
 import dayjs from 'dayjs';
 
+// --- ДОПОМІЖНА ФУНКЦІЯ ФОРМАТУВАННЯ ---
 const formatStory = (storyObject) => {
-  const { _id: id, __v, ownerId,  ...story } = storyObject.toObject();
+  const story = storyObject.toObject ? storyObject.toObject() : storyObject;
+  const { _id, __v, ownerId, ...rest } = story;
 
-  return({
-  ...story,
-  id,
-  ...(story.category ? { category: { id: story.category._id, name: story.category.name } } : {}),
-  ...(ownerId
-    ? {
-        owner: {
+  return {
+    ...rest,
+    id: _id,
+    category: story.category?._id
+      ? { id: story.category._id, name: story.category.name }
+      : story.category,
+    owner: ownerId?._id
+      ? {
           id: ownerId._id,
           name: ownerId.name,
           avatarUrl: ownerId.avatarUrl,
-        },
-      }
-    : {}),
-  formattedDate: dayjs(story.date).format('DD.MM.YYYY'),
-})
+        }
+      : ownerId,
+    formattedDate: dayjs(story.date).format('DD.MM.YYYY'),
+  };
 };
 
+// --- ОТРИМАТИ ВСІ ІСТОРІЇ ---
 export const getAllStories = async (req, res) => {
   const {
     page = 1,
@@ -47,7 +50,7 @@ export const getAllStories = async (req, res) => {
 
   if (favorite === 'true' && req.user?._id) {
     const user = await User.findById(req.user._id);
-    if (user && user.savedStories?.length) {
+    if (user?.savedStories?.length) {
       filter._id = { $in: user.savedStories };
     } else {
       return res.status(200).json({
@@ -60,16 +63,14 @@ export const getAllStories = async (req, res) => {
     }
   }
 
-  const normalizedSortOrder = sortOrder.toLowerCase() === 'asc' ? 1 : -1;
-
   const [total, stories] = await Promise.all([
     Story.countDocuments(filter),
     Story.find(filter)
       .skip(skip)
       .limit(limitNum)
-      .sort({ [sortBy]: normalizedSortOrder })
+      .sort({ [sortBy]: sortOrder === 'asc' ? 1 : -1 })
       .populate('category', 'name')
-      .populate('ownerId', 'name avatarUrl email description'), // популяція для карток історій
+      .populate('ownerId', 'name avatarUrl email'),
   ]);
 
   res.status(200).json({
@@ -81,6 +82,7 @@ export const getAllStories = async (req, res) => {
   });
 };
 
+// --- ОТРИМАТИ ОДНУ ІСТОРІЮ ---
 export const getStoryById = async (req, res) => {
   const { id } = req.params;
   const story = await Story.findById(id)
@@ -92,6 +94,7 @@ export const getStoryById = async (req, res) => {
   res.status(200).json(formatStory(story));
 };
 
+// --- ВЛАСНІ ІСТОРІЇ КОРИСТУВАЧА ---
 export const getOwnStories = async (req, res) => {
   const userId = req.user._id;
   const { page = 1, perPage = 10 } = req.query;
@@ -119,9 +122,11 @@ export const getOwnStories = async (req, res) => {
   });
 };
 
+// --- ЗБЕРЕЖЕНІ ІСТОРІЇ ---
 export const getSavedStories = async (req, res) => {
   const userId = req.user._id;
   const { page = 1, perPage = 10 } = req.query;
+
   const pageNum = Math.max(1, Number(page));
   const limitNum = Math.min(Math.max(1, Number(perPage)), 100);
   const skip = (pageNum - 1) * limitNum;
@@ -148,6 +153,7 @@ export const getSavedStories = async (req, res) => {
   });
 };
 
+// --- ДОДАТИ В ОБРАНЕ ---
 export const addToSave = async (req, res) => {
   const { id } = req.params;
   const userId = req.user._id;
@@ -165,9 +171,11 @@ export const addToSave = async (req, res) => {
   ]);
 
   if (!updatedUser) throw createHttpError(404, 'User not found');
+
   res.status(200).json(updatedUser.savedStories);
 };
 
+// --- ВИДАЛИТИ З ОБРАНОГО ---
 export const removeFromSave = async (req, res) => {
   const { id } = req.params;
   const userId = req.user._id;
@@ -190,6 +198,7 @@ export const removeFromSave = async (req, res) => {
   res.status(200).json(updatedUser.savedStories);
 };
 
+// --- СТВОРИТИ ІСТОРІЮ ---
 export const createStory = async (req, res) => {
   const { title, article, category } = req.body;
   const imgBuffer = req.file?.buffer;
@@ -219,6 +228,7 @@ export const createStory = async (req, res) => {
   res.status(201).json(formatStory(populatedStory));
 };
 
+// --- ОНОВИТИ ІСТОРІЮ ---
 export const updateStory = async (req, res) => {
   const { id } = req.params;
   const { title, article, category } = req.body;
@@ -253,6 +263,7 @@ export const updateStory = async (req, res) => {
   res.status(200).json(formatStory(updatedStory));
 };
 
+// --- ВИДАЛИТИ ІСТОРІЮ ---
 export const deleteStory = async (req, res) => {
   const { id } = req.params;
   const story = await Story.findById(id);

@@ -140,7 +140,12 @@ router.get('/me', authenticate, getCurrentUser);
  *       400:
  *         description: Bad request (no file or invalid format)
  */
-router.patch('/me/avatar', authenticate, uploadAvatar.single('avatar'), updateUserAvatar);
+router.patch(
+  '/me/avatar',
+  authenticate,
+  uploadAvatar.single('avatar'),
+  updateUserAvatar,
+);
 
 /**
  * @swagger
@@ -173,7 +178,12 @@ router.patch('/me/avatar', authenticate, uploadAvatar.single('avatar'), updateUs
  *       500:
  *         description: Internal server error
  */
-router.patch('/me/profile', authenticate, celebrate(updateUserSchema), updateUserInfo);
+router.patch(
+  '/me/profile',
+  authenticate,
+  celebrate(updateUserSchema),
+  updateUserInfo,
+);
 
 /**
  * @swagger
