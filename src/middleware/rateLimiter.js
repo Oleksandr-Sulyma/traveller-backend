@@ -22,7 +22,6 @@ export const generalLimiter = rateLimit({
   trustProxy: true,
 });
 
-
 export const authLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 година
   max: isProduction ? 5 : 100, // 5 спроб на годину в проді
