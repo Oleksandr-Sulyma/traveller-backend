@@ -100,10 +100,10 @@ displayRequestDuration: true,
 app.use(generalLimiter);
 
 // 8. РОУТИ
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/stories', storyRoutes);
-app.use('/api/categories', categoryRoutes);
+app.use('/auth', authRoutes);
+app.use('/users', userRoutes);
+app.use('/stories', storyRoutes);
+app.use('/categories', categoryRoutes);
 
 // 9. ОБРОБКА ПОМИЛОК
 app.use(notFoundHandler);
