@@ -13,9 +13,9 @@ const paginationSchema = {
 export const getAllUsersSchema = {
   [Segments.QUERY]: Joi.object({
     ...paginationSchema,
-    sortBy: Joi.string().valid('name', 'email', 'createdAt').default('createdAt'),
+    sortBy: Joi.string().valid('name', 'email', 'createdAt', 'articlesAmount').default('createdAt'),
     sortOrder: Joi.string().valid('asc', 'desc').default('desc'),
-    search: Joi.string().allow('').max(50), // Пошук за ім'ям/email
+    search: Joi.string().allow('').max(50),
   }),
 };
 
