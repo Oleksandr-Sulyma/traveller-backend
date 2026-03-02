@@ -14,10 +14,10 @@ import { logger } from './middleware/logger.js';
 import { notFoundHandler } from './middleware/notFoundHandler.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
-import authRouter from './routers/authRouter.js';
-import userRouter from './routers/userRouter.js';
-import storyRouter from './routers/storyRouter.js';
-import categoryRouter from './routers/categoryRouter.js';
+import authRouter from './routes/authRouter.js';
+import userRouter from './routes/userRouter.js';
+import storyRouter from './routes/storyRouter.js';
+import categoryRouter from './routes/categoryRouter.js';
 import { swaggerOptions } from './utils/swagger.js';
 import { generalLimiter } from './middleware/rateLimiter.js';
 
