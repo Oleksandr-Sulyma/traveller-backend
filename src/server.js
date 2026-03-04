@@ -33,20 +33,22 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-        "img-src": ["'self'", "https:", "data:"],
+        'img-src': ["'self'", 'https:', 'data:'],
       },
     },
-  })
+  }),
 );
 
-app.use(cors({
-  origin: [
-    process.env.FRONTEND_DOMAIN,
-    'http://localhost:3000',
-    'http://localhost:5173'
-  ],
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: [
+      process.env.FRONTEND_DOMAIN,
+      'http://localhost:3000',
+      'http://localhost:5173',
+    ],
+    credentials: true,
+  }),
+);
 
 app.use(logger);
 app.use(express.json({ limit: '5mb' }));
@@ -68,7 +70,10 @@ app.use(notFoundHandler);
 // Обробка помилок валідації Celebrate
 app.use((err, req, res, next) => {
   if (isCelebrateError(err)) {
-    const errorDetail = err.details.get('body') || err.details.get('query') || err.details.get('params');
+    const errorDetail =
+      err.details.get('body') ||
+      err.details.get('query') ||
+      err.details.get('params');
     return res.status(400).json({
       status: 400,
       message: errorDetail.details[0].message,
@@ -96,7 +101,9 @@ const startServer = async () => {
   try {
     await connectMongoDB();
     app.listen(PORT, () => {
-      console.log(`🚀 Server ready [${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'}]`);
+      console.log(
+        `🚀 Server ready [${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'}]`,
+      );
     });
   } catch (error) {
     console.error('💥 Startup error:', error);

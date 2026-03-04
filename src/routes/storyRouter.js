@@ -35,7 +35,7 @@ router.post(
   authenticate,
   uploadStoryImg.single('img'),
   celebrate(createStorySchema),
-  createStory
+  createStory,
 );
 
 router.patch(
@@ -43,12 +43,22 @@ router.patch(
   authenticate,
   uploadStoryImg.single('img'),
   celebrate(updateStorySchema),
-  updateStory
+  updateStory,
 );
 
 router.delete('/:id', authenticate, celebrate(getStoryByIdSchema), deleteStory);
 
-router.post('/:id/save', authenticate, celebrate(getStoryByIdSchema), addToSave);
-router.delete('/:id/save', authenticate, celebrate(getStoryByIdSchema), removeFromSave);
+router.post(
+  '/:id/save',
+  authenticate,
+  celebrate(getStoryByIdSchema),
+  addToSave,
+);
+router.delete(
+  '/:id/save',
+  authenticate,
+  celebrate(getStoryByIdSchema),
+  removeFromSave,
+);
 
 export default router;
