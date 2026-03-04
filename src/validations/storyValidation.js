@@ -47,9 +47,6 @@ export const createStorySchema = {
       'any.required': 'Категорія є обов’язковою',
       'string.length': 'Невірний формат ID категорії',
     }),
-    img: Joi.any().required().messages({
-      'any.required': 'Фото історії є обов’язковим',
-    }),
   }),
 };
 
@@ -61,7 +58,6 @@ export const updateStorySchema = {
     title: Joi.string().max(80).trim(),
     article: Joi.string().max(2500).trim(),
     category: objectIdSchema,
-    img: Joi.any(),
   }).min(1).messages({
     'object.min': 'Надішліть хоча б одне поле для оновлення',
   }),
