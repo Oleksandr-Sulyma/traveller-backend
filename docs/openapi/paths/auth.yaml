@@ -1,0 +1,199 @@
+register:
+  post:
+    summary: Реєстрація користувача 📝
+    operationId: registerUser
+    tags:
+      - Auth
+    security: [] # Публічний доступ
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas.yaml#/RegisterRequest'
+    responses:
+      '201':
+        description: Успішна реєстрація
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/UserResponse'
+      '400':
+        description: Помилка валідації
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+      '409':
+        description: Користувач з такою поштою вже зареєстрований
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+
+login:
+  post:
+    summary: Вхід у систему 🔑
+    operationId: loginUser
+    tags:
+      - Auth
+    security: [] # Публічний доступ
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas.yaml#/LoginRequest'
+    responses:
+      '200':
+        description: Успішний вхід
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/UserResponse'
+      '401':
+        description: Невірна пошта або пароль
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+
+refresh:
+  post:
+    summary: Оновлення сесії 🔄
+    operationId: refreshUserSession
+    tags:
+      - Auth
+    responses:
+      '200':
+        description: Сесію оновлено
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: 'Сесію оновлено'
+      '401':
+        description: Будь ласка, увійдіть у свій акаунт
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+
+logout:
+  post:
+    summary: Вихід із системи 🚪
+    operationId: logoutUser
+    tags:
+      - Auth
+    responses:
+      '204':
+        description: Успішний вихід
+      '401':
+        description: Неавторизований
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+
+check:
+  get:
+    summary: Перевірка поточної сесії ✅
+    operationId: checkSession
+    tags:
+      - Auth
+    responses:
+      '200':
+        description: Користувач авторизований
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/UserResponse'
+      '401':
+        description: Неавторизований
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+
+request-reset-email:
+  post:
+    summary: Запит на відновлення пароля 📧
+    operationId: requestResetEmail
+    tags:
+      - Auth
+    security: [] # Публічний доступ
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [email]
+            properties:
+              email:
+                type: string
+                format: email
+    responses:
+      '200':
+        description: Лист надіслано
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: 'Лист для відновлення пароля надіслано'
+      '400':
+        description: Некоректний email
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+      '404':
+        description: Користувача не знайдено
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+
+reset-password:
+  post:
+    summary: Встановлення нового пароля 🆕
+    operationId: resetPassword
+    tags:
+      - Auth
+    security: [] # Публічний доступ
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [token, password]
+            properties:
+              token:
+                type: string
+              password:
+                type: string
+                minLength: 8
+    responses:
+      '200':
+        description: Пароль змінено
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: 'Пароль успішно змінено'
+      '400':
+        description: Некоректний токен або пароль
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'

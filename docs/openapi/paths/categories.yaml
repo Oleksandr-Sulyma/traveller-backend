@@ -1,0 +1,21 @@
+categoriesRoot:
+  get:
+    operationId: getCategories
+    summary: Отримати список категорій 🏷️
+    description: Повертає повний список доступних категорій для подорожей (наприклад, Nature, City, Food).
+    tags: [Categories]
+    responses:
+      '200':
+        description: Список категорій отримано успішно
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../components/schemas.yaml#/Category'
+      '500':
+        description: Помилка сервера
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'

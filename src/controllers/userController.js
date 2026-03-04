@@ -1,89 +1,53 @@
 import createHttpError from 'http-errors';
 import { User } from '../models/user.js';
-import { Story } from '../models/story.js';
 import { uploadFileOrThrowError } from '../utils/uploadFileOrThrowError.js';
-import mongoose from 'mongoose';
 
 export const getAllUsers = async (req, res) => {
-  const { page = 1, perPage = 10 } = req.query;
+  const { page = 1, perPage = 10, search } = req.query;
   const pageNum = Number(page);
   const perPageNum = Number(perPage);
   const skip = (pageNum - 1) * perPageNum;
 
-  const users = await User.find({})
-    .select('_id name email avatarUrl description articlesAmount createdAt')
-    .skip(skip)
-    .limit(perPageNum)
-    .sort({ createdAt: -1 });
+  let filter = {};
+  if (search) {
+    filter.name = { $regex: search, $options: 'i' };
+  }
 
-  const total = await User.countDocuments();
+  const [users, total] = await Promise.all([
+    User.find(filter)
+      .skip(skip)
+      .limit(perPageNum)
+      .sort({ createdAt: -1 }),
+    User.countDocuments(filter),
+  ]);
 
   res.status(200).json({
-    users: users || [],
-    pagination: {
-      page: pageNum,
-      perPage: perPageNum,
-      total,
-      pages: Math.ceil(total / perPageNum),
-    },
+    users,
+    totalPages: Math.ceil(total / perPageNum),
   });
 };
 
 export const getUserById = async (req, res) => {
   const { id } = req.params;
-  const { page = 1, perPage = 10 } = req.query;
-  const pageNum = Number(page);
-  const perPageNum = Number(perPage);
-
   const user = await User.findById(id);
+
   if (!user) {
-    throw createHttpError(404, 'User not found');
+    throw createHttpError(404, '@Користувача не знайдено');
   }
 
-  const storiesQuery = Story.find({ ownerId: id });
-  const skip = (pageNum - 1) * perPageNum;
-
-  const [totalStories, stories] = await Promise.all([
-    storiesQuery.clone().countDocuments(),
-    storiesQuery
-      .clone()
-      .skip(skip)
-      .limit(perPageNum)
-      .sort({ favoriteCount: -1, createdAt: -1 })
-      .populate('category', 'name')
-      .populate('ownerId', 'name'),
-  ]);
-
-  const totalPages = Math.ceil(totalStories / perPageNum);
-
-  res.status(200).json({
-    user: {
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      avatarUrl: user.avatarUrl,
-      description: user.description,
-      articlesAmount: user.articlesAmount,
-      createdAt: user.createdAt,
-    },
-    pageNum,
-    perPageNum,
-    totalStories,
-    totalPages,
-    stories,
-  });
+  res.status(200).json(user);
 };
 
 export const getCurrentUser = async (req, res) => {
   if (!req.user) {
-    throw createHttpError(401, 'Unauthorized');
+    throw createHttpError(401, '@Користувач не авторизований');
   }
-  res.status(200).json({ user: req.user });
+  res.status(200).json(req.user);
 };
 
 export const updateUserAvatar = async (req, res) => {
   if (!req.file) {
-    throw createHttpError(400, 'No file provided');
+    throw createHttpError(400, 'Будь ласка, виберіть файл для завантаження');
   }
 
   const uploadedImgUrl = await uploadFileOrThrowError(req.file.buffer);
@@ -91,18 +55,18 @@ export const updateUserAvatar = async (req, res) => {
   const user = await User.findByIdAndUpdate(
     req.user._id,
     { avatarUrl: uploadedImgUrl },
-    { new: true },
+    { new: true }
   );
 
   if (!user) {
-    throw createHttpError(404, 'User not found');
+    throw createHttpError(404, '@Користувача не знайдено');
   }
 
-  res.status(200).json({ avatarUrl: user.avatarUrl });
+  res.status(200).json(user);
 };
 
 export const updateUserInfo = async (req, res) => {
-  const { name, description } = req.body || {};
+  const { name, description } = req.body;
 
   const user = await User.findByIdAndUpdate(
     req.user._id,
@@ -114,13 +78,8 @@ export const updateUserInfo = async (req, res) => {
   );
 
   if (!user) {
-    throw createHttpError(404, 'User not found');
+    throw createHttpError(404, '@Користувача не знайдено');
   }
 
-  res.status(200).json({
-    _id: user._id,
-    name: user.name,
-    avatarUrl: user.avatarUrl,
-    description: user.description,
-  });
+  res.status(200).json(user);
 };

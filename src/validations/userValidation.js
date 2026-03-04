@@ -1,58 +1,67 @@
 import { Joi, Segments } from 'celebrate';
 
-// Спільна схема для MongoDB ObjectId
 const objectIdSchema = Joi.string().hex().length(24);
 
-// Спільна схема для пагінації (можна імпортувати, якщо є окремо)
 const paginationSchema = {
   page: Joi.number().integer().min(1).default(1),
-  perPage: Joi.number().integer().min(1).max(100).default(10),
+  perPage: Joi.number().integer().min(1).max(100).default(12),
 };
 
-// Валідація для отримання списку всіх користувачів
 export const getAllUsersSchema = {
   [Segments.QUERY]: Joi.object({
     ...paginationSchema,
-    sortBy: Joi.string().valid('name', 'email', 'createdAt', 'articlesAmount').default('createdAt'),
+    sortBy: Joi.string()
+      .valid('name', 'email', 'createdAt', 'articlesAmount')
+      .default('createdAt'),
     sortOrder: Joi.string().valid('asc', 'desc').default('desc'),
     search: Joi.string().allow('').max(50),
   }),
 };
 
-// Валідація для отримання профілю конкретного юзера та його історій
 export const getUserStoriesSchema = {
   [Segments.PARAMS]: Joi.object({
     id: objectIdSchema.required().messages({
-      'string.length': 'User ID must be 24 characters long',
-      'string.hex': 'User ID must be a valid hex string',
-      'any.required': 'User ID is required',
+      'any.required': 'ID користувача є обов’язковим',
+      'string.length': 'Невірний формат ID',
     }),
   }),
   [Segments.QUERY]: Joi.object({
     ...paginationSchema,
-    sortBy: Joi.string().valid('createdAt', 'title', 'favoriteCount').default('createdAt'),
+    sortBy: Joi.string()
+      .valid('createdAt', 'title', 'favoriteCount')
+      .default('createdAt'),
     sortOrder: Joi.string().valid('asc', 'desc').default('desc'),
   }),
 };
 
 
-//  Валідація для оновлення основної інформації профілю
 export const updateUserSchema = {
   [Segments.BODY]: Joi.object({
-    name: Joi.string().min(2).max(32).trim().messages({
-      'string.min': 'Name must be at least 2 characters long',
-      'string.max': 'Name cannot exceed 32 characters',
+    name: Joi.string().max(32).required().messages({
+      'string.max': 'Ім’я не може бути довшим за 32 символи',
+      'any.required': 'Ім’я є обов’язковим',
     }),
-    description: Joi.string().max(150).trim().allow('').messages({
-      'string.max': 'Description is too long (max 150 chars)',
+    email: Joi.string().email().max(64).required().messages({
+      'string.email': 'Введіть коректний email',
+      'string.max': 'Email не може бути довшим за 64 символи',
+      'any.required': 'Email є обов’язковим',
     }),
-  }).min(1),
+    description: Joi.string().max(150).required().trim().messages({
+      'string.max': 'Опис не може бути довшим за 150 символів',
+      'any.required': 'Опис є обов’язковим',
+    }),
+    avatar: Joi.any().required().messages({
+      'any.required': 'Аватар є обов’язковим',
+    }),
+  }),
 };
 
-// Валідація для зміни пароля
 export const changePasswordSchema = {
   [Segments.BODY]: Joi.object({
     oldPassword: Joi.string().required(),
-    newPassword: Joi.string().min(6).max(20).required(),
+    newPassword: Joi.string().min(8).max(128).required().messages({
+      'string.min': 'Пароль має бути не менше 8 символів',
+      'string.max': 'Пароль занадто довгий',
+    }),
   }),
 };

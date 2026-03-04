@@ -1,0 +1,161 @@
+# Основні моделі даних
+User:
+  type: object
+  properties:
+    id:
+      type: string
+      example: '65fb50c80ae91338641121f5'
+    name:
+      type: string
+      example: 'Мандрівник'
+    email:
+      type: string
+      format: email
+      example: 'user@example.com'
+    avatarUrl:
+      type: string
+      nullable: true
+      example: 'https://example.com/avatar.jpg'
+    articlesAmount:
+      type: integer
+      default: 0
+    description:
+      type: string
+      nullable: true
+    savedStories:
+      type: array
+      items:
+        type: string
+      description: Масив ID збережених історій
+    createdAt:
+      type: string
+      format: date-time
+    updatedAt:
+      type: string
+      format: date-time
+
+UserResponse:
+  type: object
+  properties:
+    id:
+      type: string
+      example: '65fb50c80ae91338641121f5'
+    name:
+      type: string
+    email:
+      type: string
+    avatarUrl:
+      type: string
+      nullable: true
+
+RegisterRequest:
+  type: object
+  required: [name, email, password]
+  properties:
+    name:
+      type: string
+      minLength: 2
+      example: 'Мандрівник'
+    email:
+      type: string
+      format: email
+      example: 'user@example.com'
+    password:
+      type: string
+      format: password
+      minLength: 8
+      example: 'password123'
+
+LoginRequest:
+  type: object
+  required: [email, password]
+  properties:
+    email:
+      type: string
+      format: email
+      example: 'user@example.com'
+    password:
+      type: string
+      format: password
+      example: 'password123'
+
+Story:
+  type: object
+  properties:
+    id:
+      type: string
+      example: '65fb50c80ae91338641121f6'
+    title:
+      type: string
+    article:
+      type: string
+    img:
+      type: string
+    category:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+    ownerId:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        avatarUrl: { type: string, nullable: true }
+    favoriteCount:
+      type: integer
+      default: 0
+    formattedDate:
+      type: string
+      example: '24.05.2024'
+    createdAt:
+      type: string
+      format: date-time
+    updatedAt:
+      type: string
+      format: date-time
+
+StoryPost:
+  type: object
+  required: [title, article, category, img]
+  properties:
+    title:
+      type: string
+      maxLength: 80
+    article:
+      type: string
+      maxLength: 2500
+    category:
+      type: string
+      description: MongoDB ObjectId категорії
+    img:
+      type: string
+      format: binary
+
+StoryUpdate:
+  type: object
+  properties:
+    title: { type: string, maxLength: 80 }
+    article: { type: string, maxLength: 2500 }
+    category: { type: string }
+    img: { type: string, format: binary }
+
+Category:
+  type: object
+  required: [id, name]
+  properties:
+    id:
+      type: string
+      example: '65fb50c80ae91338641121f0'
+    name:
+      type: string
+      example: 'Travel'
+
+Error:
+  type: object
+  properties:
+    status: { type: integer }
+    message: { type: string }
+    errors:
+      type: array
+      items: { type: object }

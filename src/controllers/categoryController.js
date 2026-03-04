@@ -4,6 +4,7 @@ import createHttpError from "http-errors";
 export const getAllCategories = async (req, res) => {
   try {
     const categories = await Category.find();
+
     res.status(200).json(
       categories.map((category) => ({
         id: category._id,
@@ -11,9 +12,6 @@ export const getAllCategories = async (req, res) => {
       }))
     );
   } catch (error) {
-    throw createHttpError(500, "Failed to fetch categories");
+    throw createHttpError(500, "Не вдалося завантажити категорії");
   }
 };
-
-
-

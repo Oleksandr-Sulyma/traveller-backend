@@ -1,5 +1,5 @@
-import { Session } from '../models/session.js';
 import createHttpError from 'http-errors';
+import { Session } from '../models/session.js';
 import { createSession } from './auth.js';
 
 export const refreshSessionLogic = async (sessionId, refreshToken) => {
@@ -8,10 +8,12 @@ export const refreshSessionLogic = async (sessionId, refreshToken) => {
     refreshToken,
   });
 
-  if (!session) throw createHttpError(401, 'Session not found');
+  if (!session) {
+    throw createHttpError(401, 'Будь ласка, увійдіть у свій акаунт');
+  }
 
   if (new Date() > new Date(session.refreshTokenValidUntil)) {
-    throw createHttpError(401, 'Session expired');
+    throw createHttpError(401, 'Термін дії сесії закінчився, увійдіть знову');
   }
 
   await Session.deleteOne({ _id: sessionId });

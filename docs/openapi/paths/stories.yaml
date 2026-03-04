@@ -1,0 +1,191 @@
+storiesRoot:
+  get:
+    operationId: getStories
+    summary: Отримати список історій 📜
+    description: Публічний ендпоінт для перегляду стрічки історій з підтримкою пагінації та фільтрації за категоріями.
+    tags: [Stories]
+    security: [] # Публічний доступ: дозволяємо всім читати історії
+    parameters:
+      - name: page
+        in: query
+        description: Номер сторінки
+        schema: { type: integer, minimum: 1, default: 1 }
+      - name: perPage
+        in: query
+        description: Кількість елементів на сторінці
+        schema: { type: integer, minimum: 1, maximum: 100, default: 10 }
+      - name: category
+        in: query
+        description: ID категорії (MongoDB ObjectId) для фільтрації історій
+        schema: { type: string, pattern: '^[0-9a-fA-F]{24}$' }
+    responses:
+      '200':
+        description: Список історій з пагінацією
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                stories:
+                  type: array
+                  items: { $ref: '../components/schemas.yaml#/Story' }
+                totalPages: { type: integer, example: 5 }
+                totalStories: { type: integer, example: 42 }
+      '400':
+        description: Некоректні параметри запиту
+        content:
+          application/json:
+            schema: { $ref: '../components/schemas.yaml#/Error' }
+
+  post:
+    operationId: createStory
+    summary: Створити нову історію ✍️
+    description: Створення нової історії з можливістю завантаження зображення через multipart/form-data.
+    tags: [Stories]
+    # security не вказуємо — використовується глобальний cookieAuth
+    requestBody:
+      required: true
+      content:
+        multipart/form-data:
+          schema: { $ref: '../components/schemas.yaml#/StoryPost' }
+    responses:
+      '201':
+        description: Історію створено
+        content:
+          application/json:
+            schema: { $ref: '../components/schemas.yaml#/Story' }
+      '400':
+        description: Помилка валідації даних
+        content:
+          application/json:
+            schema: { $ref: '../components/schemas.yaml#/Error' }
+      '401':
+        description: Неавторизований
+
+storiesOwn:
+  get:
+    operationId: getMyStories
+    summary: Мої історії 👤
+    description: Отримання списку історій, створених поточним авторизованим користувачем.
+    tags: [Stories]
+    responses:
+      '200':
+        description: Список власних історій
+        content:
+          application/json:
+            schema:
+              type: array
+              items: { $ref: '../components/schemas.yaml#/Story' }
+      '401':
+        description: Неавторизований
+
+storiesSaved:
+  get:
+    operationId: getSavedStories
+    summary: Збережені історії 🔖
+    description: Отримання списку історій, які поточний користувач додав у «Збережені».
+    tags: [Stories]
+    responses:
+      '200':
+        description: Список збережених історій
+        content:
+          application/json:
+            schema:
+              type: array
+              items: { $ref: '../components/schemas.yaml#/Story' }
+      '401':
+        description: Неавторизований
+
+storyById:
+  get:
+    operationId: getStoryById
+    summary: Деталі історії 🔍
+    description: Публічний ендпоінт для отримання повної інформації про конкретну історію за її ID.
+    tags: [Stories]
+    security: [] # Публічний доступ: переглядати деталі може кожен
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, pattern: '^[0-9a-fA-F]{24}$' }
+    responses:
+      '200':
+        description: Об'єкт історії знайдено
+        content:
+          application/json:
+            schema: { $ref: '../components/schemas.yaml#/Story' }
+      '404':
+        description: Історію з таким ID не знайдено
+
+  patch:
+    operationId: updateStory
+    summary: Оновити історію ✏️
+    description: Редагування існуючої історії. Доступно тільки автору історії.
+    tags: [Stories]
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, pattern: '^[0-9a-fA-F]{24}$' }
+    requestBody:
+      content:
+        multipart/form-data:
+          schema: { $ref: '../components/schemas.yaml#/StoryUpdate' }
+    responses:
+      '200':
+        description: Історію успішно оновлено
+        content:
+          application/json:
+            schema: { $ref: '../components/schemas.yaml#/Story' }
+      '401':
+        description: Неавторизований
+      '403':
+        description: Доступ заборонено (ви не є автором цієї історії)
+
+  delete:
+    operationId: deleteStory
+    summary: Видалити історію 🗑️
+    tags: [Stories]
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, pattern: '^[0-9a-fA-F]{24}$' }
+    responses:
+      '204':
+        description: Успішно видалено
+      '401':
+        description: Неавторизований
+      '403':
+        description: Доступ заборонено
+
+storySave:
+  post:
+    operationId: saveStory
+    summary: Додати в збережені ❤️
+    tags: [Stories]
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, pattern: '^[0-9a-fA-F]{24}$' }
+    responses:
+      '200':
+        description: Історію додано до вашої колекції
+      '401':
+        description: Неавторизований
+
+  delete:
+    operationId: unsaveStory
+    summary: Видалити зі збережених 💔
+    tags: [Stories]
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, pattern: '^[0-9a-fA-F]{24}$' }
+    responses:
+      '204':
+        description: Видалено зі збережених
+      '401':
+        description: Неавторизований

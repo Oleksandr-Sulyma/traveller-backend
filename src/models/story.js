@@ -26,17 +26,35 @@ const storySchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-    date: {
-      type: String,
-      required: true,
-    },
     favoriteCount: {
       type: Number,
       default: 0,
     },
   },
-  { timestamps: true },
+  {
+    timestamps: true,
+    versionKey: false
+  },
 );
+
+storySchema.methods.toJSON = function () {
+  const obj = this.toObject();
+  obj.id = obj._id;
+
+  if (obj.createdAt) {
+    const dateObj = new Date(obj.createdAt);
+    obj.formattedDate = dateObj.toLocaleDateString('uk-UA', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+  }
+
+  delete obj._id;
+  delete obj.__v;
+  return obj;
+};
+
 
 storySchema.index({ category: 1 });
 storySchema.index({ ownerId: 1 });

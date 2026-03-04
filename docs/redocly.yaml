@@ -1,0 +1,11 @@
+apis:
+  travel-stories@v1:
+    root: ./openapi/openapi.yaml
+
+extends:
+  - recommended
+
+rules:
+  no-unused-components: error
+  operation-operationId: warn
+  no-server-example.com: off

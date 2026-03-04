@@ -1,0 +1,101 @@
+me:
+  get:
+    operationId: getCurrentUser
+    summary: Отримати дані поточного користувача 🆔
+    description: Повертає повну інформацію про користувача, який авторизований через куки.
+    tags: [Users]
+    # security не вказуємо, щоб спрацював глобальний захист
+    responses:
+      '200':
+        description: Дані користувача отримано
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/User'
+      '401':
+        description: Неавторизований (відсутній або недійсний токен)
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+
+  patch:
+    operationId: updateCurrentUser
+    summary: Оновити профіль поточного користувача ✨
+    description: Дозволяє змінити ім'я, опис або завантажити новий аватар через multipart/form-data.
+    tags: [Users]
+    requestBody:
+      description: Дані для оновлення профілю
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+                description: Нове відображуване ім'я
+                example: "Олександр Мандрівник"
+              description:
+                type: string
+                description: Коротка інформація про себе
+                example: "Шукаю найкращі краєвиди Карпат"
+              avatar:
+                type: string
+                format: binary
+                description: Файл зображення для аватара
+    responses:
+      '200':
+        description: Профіль успішно оновлено
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/User'
+      '400':
+        description: Некоректні дані (наприклад, занадто великий файл)
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+      '401':
+        description: Неавторизований
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+
+byId:
+  get:
+    operationId: getUserById
+    summary: Отримати користувача за ID 🔍
+    description: Публічний ендпоінт для перегляду профілю іншого користувача.
+    tags: [Users]
+    security: [] # Скасовуємо глобальний захист для цього методу
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Унікальний ідентифікатор користувача (MongoDB ObjectId)
+        schema:
+          type: string
+          pattern: '^[0-9a-fA-F]{24}$'
+        example: "65fb50c80ae91338641121f5"
+    responses:
+      '200':
+        description: Профіль користувача знайдено
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/User'
+      '400':
+        description: Некоректний формат ID
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+      '404':
+        description: Користувача з таким ID не існує
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'

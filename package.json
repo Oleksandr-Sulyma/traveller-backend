@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "docs:lint": "redocly lint docs/redocly.yaml",
+    "docs:preview": "redocly preview-docs docs/redocly.yaml",
+    "docs:build": "redocly build-docs docs/redocly.yaml -o dist/index.html"
   },
   "repository": {
     "type": "git",
@@ -37,15 +40,15 @@
     "jsonwebtoken": "^9.0.3",
     "mongodb": "^7.1.0",
     "mongoose": "^9.2.2",
-    "multer": "^2.0.2",
+    "multer": "^2.1.0",
     "nodemailer": "^8.0.1",
     "pino-http": "^11.0.0",
     "pino-pretty": "^13.1.3",
-    "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.1"
+    "yaml": "^2.8.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.3",
+    "@redocly/cli": "^1.34.10",
     "eslint": "^10.0.1",
     "globals": "^17.3.0",
     "nodemon": "^3.1.11"

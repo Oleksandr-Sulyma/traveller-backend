@@ -1,0 +1,72 @@
+openapi: 3.0.0
+info:
+  title: Travel Stories API 🌍
+  version: 1.0.0
+  description: API для сервісу обміну історіями подорожей. Дозволяє створювати, читати та керувати історіями.
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+
+servers:
+  - url: ${API_URL}
+    description: "Бекенд (динамічно через змінну оточення)"
+
+# 🔐 Глобальний захист
+security:
+  - cookieAuth: []
+
+paths:
+  # --- Auth ---
+  /auth/register:
+    $ref: './paths/auth.yaml#/register'
+  /auth/login:
+    $ref: './paths/auth.yaml#/login'
+  /auth/refresh:
+    $ref: './paths/auth.yaml#/refresh'
+  /auth/logout:
+    $ref: './paths/auth.yaml#/logout'
+  /auth/check:
+    $ref: './paths/auth.yaml#/check'
+  /auth/request-reset-email:
+    $ref: './paths/auth.yaml#/request-reset-email'
+  /auth/reset-password:
+    $ref: './paths/auth.yaml#/reset-password'
+
+  # --- Users ---
+  /users/me:
+    $ref: './paths/users.yaml#/me'
+  /users/{id}:
+    $ref: './paths/users.yaml#/byId'
+
+  # --- Stories ---
+  /stories:
+    $ref: './paths/stories.yaml#/storiesRoot'
+  /stories/own:
+    $ref: './paths/stories.yaml#/storiesOwn'
+  /stories/saved:
+    $ref: './paths/stories.yaml#/storiesSaved'
+  /stories/{id}:
+    $ref: './paths/stories.yaml#/storyById'
+  /stories/{id}/save:
+    $ref: './paths/stories.yaml#/storySave'
+
+  # --- Categories ---
+  /categories:
+    $ref: './paths/categories.yaml#/categoriesRoot'
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: accessToken
+
+  schemas:
+    User:
+      $ref: './components/schemas.yaml#/User'
+    Story:
+      $ref: './components/schemas.yaml#/Story'
+    Category:
+      $ref: './components/schemas.yaml#/Category'
+    Error:
+      $ref: './components/schemas.yaml#/Error'
