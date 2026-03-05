@@ -15,7 +15,9 @@ export const registerUser = async (req, res, next) => {
   const { name, email, password } = req.body;
   const existingUser = await User.findOne({ email });
   if (existingUser) {
-    return next(createHttpError(409, 'Користувач з такою поштою вже зареєстрований'));
+    return next(
+      createHttpError(409, 'Користувач з такою поштою вже зареєстрований'),
+    );
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -57,6 +59,11 @@ export const loginUser = async (req, res, next) => {
     name: user.name,
     email: user.email,
     avatarUrl: user.avatarUrl,
+    savedStories: user.savedStories,
+    articlesAmount: user.articlesAmount,
+    description: user.description,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
   });
 };
 
@@ -86,13 +93,15 @@ export const requestResetEmail = async (req, res, next) => {
   const { email } = req.body;
   const user = await User.findOne({ email });
   if (!user) {
-    return res.status(200).json({ message: 'Лист для відновлення пароля надіслано' });
+    return res
+      .status(200)
+      .json({ message: 'Лист для відновлення пароля надіслано' });
   }
 
   const resetToken = jwt.sign(
     { sub: user._id, email },
     process.env.JWT_SECRET,
-    { expiresIn: '15m' }
+    { expiresIn: '15m' },
   );
 
   const templatePath = path.resolve('src/templates/reset-password-email.html');
@@ -122,7 +131,9 @@ export const resetPassword = async (req, res, next) => {
   try {
     payload = jwt.verify(token, process.env.JWT_SECRET);
   } catch {
-    return next(createHttpError(401, 'Посилання недійсне або термін його дії закінчився'));
+    return next(
+      createHttpError(401, 'Посилання недійсне або термін його дії закінчився'),
+    );
   }
 
   const user = await User.findOne({ _id: payload.sub, email: payload.email });
