@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Traveller Backend – fully-featured REST API for user authentication, profiles, and story management.",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
@@ -13,12 +14,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Oleksandr-Sulyma/traveller-backend.git"
+    "url": "https://github.com/Oleksandr-Sulyma/traveller-backend.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "module",
   "bugs": {
     "url": "https://github.com/Oleksandr-Sulyma/traveller-backend/issues"
   },
@@ -49,6 +49,7 @@
   "devDependencies": {
     "@eslint/js": "^9.39.3",
     "@redocly/cli": "^1.34.10",
+    "concurrently": "^9.2.1",
     "eslint": "^10.0.1",
     "globals": "^17.3.0",
     "nodemon": "^3.1.11"

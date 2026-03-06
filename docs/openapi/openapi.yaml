@@ -37,6 +37,8 @@ paths:
     $ref: './paths/users.yaml#/me'
   /users/{id}:
     $ref: './paths/users.yaml#/byId'
+  /users/{id}/private:
+    $ref: './paths/users.yaml#/byIdPrivate'
 
   # --- Stories ---
   /stories:

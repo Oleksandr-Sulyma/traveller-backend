@@ -2,16 +2,26 @@ me:
   get:
     operationId: getCurrentUser
     summary: Отримати дані поточного користувача 🆔
-    description: Повертає повну інформацію про користувача, який авторизований через куки.
+    description: Повертає повну інформацію про авторизованого користувача, включно з його історіями та збереженими історіями.
     tags: [Users]
-    # security не вказуємо, щоб спрацював глобальний захист
     responses:
       '200':
         description: Дані користувача отримано
         content:
           application/json:
             schema:
-              $ref: '../components/schemas.yaml#/User'
+              type: object
+              properties:
+                user:
+                  $ref: '../components/schemas.yaml#/User'
+                stories:
+                  type: array
+                  items:
+                    $ref: '../components/schemas.yaml#/Story'
+                savedStories:
+                  type: array
+                  items:
+                    $ref: '../components/schemas.yaml#/Story'
       '401':
         description: Неавторизований (відсутній або недійсний токен)
         content:
@@ -66,11 +76,11 @@ me:
 
 byId:
   get:
-    operationId: getUserById
-    summary: Отримати користувача за ID 🔍
-    description: Публічний ендпоінт для перегляду профілю іншого користувача.
+    operationId: getUserByIdPublic
+    summary: Публічна сторінка користувача 🔍
+    description: Повертає інформацію про користувача та його публічні історії.
     tags: [Users]
-    security: [] # Скасовуємо глобальний захист для цього методу
+    security: []
     parameters:
       - name: id
         in: path
@@ -80,13 +90,36 @@ byId:
           type: string
           pattern: '^[0-9a-fA-F]{24}$'
         example: "65fb50c80ae91338641121f5"
+      - name: sortBy
+        in: query
+        required: false
+        description: Поле для сортування історій
+        schema:
+          type: string
+          enum: [createdAt, title, favoriteCount]
+          default: createdAt
+      - name: sortOrder
+        in: query
+        required: false
+        description: Напрямок сортування
+        schema:
+          type: string
+          enum: [asc, desc]
+          default: desc
     responses:
       '200':
-        description: Профіль користувача знайдено
+        description: Профіль користувача та історії знайдено
         content:
           application/json:
             schema:
-              $ref: '../components/schemas.yaml#/User'
+              type: object
+              properties:
+                user:
+                  $ref: '../components/schemas.yaml#/User'
+                stories:
+                  type: array
+                  items:
+                    $ref: '../components/schemas.yaml#/Story'
       '400':
         description: Некоректний формат ID
         content:
@@ -95,6 +128,70 @@ byId:
               $ref: '../components/schemas.yaml#/Error'
       '404':
         description: Користувача з таким ID не існує
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+
+byIdPrivate:
+  get:
+    operationId: getUserByIdPrivate
+    summary: Отримати приватну сторінку користувача 🔒
+    description: Повертає дані поточного користувача, його власні історії та збережені історії. Доступно лише для авторизованого користувача.
+    tags: [Users]
+    security:
+      - cookieAuth: [] 
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Унікальний ID користувача (MongoDB ObjectId)
+        schema:
+          type: string
+          pattern: '^[0-9a-fA-F]{24}$'
+        example: "69a800af3b64575b6915c595"
+      - name: sortBy
+        in: query
+        required: false
+        description: Поле для сортування історій
+        schema:
+          type: string
+          enum: [createdAt, title, favoriteCount]
+          default: createdAt
+      - name: sortOrder
+        in: query
+        required: false
+        description: Напрямок сортування
+        schema:
+          type: string
+          enum: [asc, desc]
+          default: desc
+    responses:
+      '200':
+        description: Дані користувача, його історії та збережені історії
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user:
+                  $ref: '../components/schemas.yaml#/User'
+                stories:
+                  type: array
+                  items:
+                    $ref: '../components/schemas.yaml#/Story'
+                savedStories:
+                  type: array
+                  items:
+                    $ref: '../components/schemas.yaml#/Story'
+      '401':
+        description: Неавторизований
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+      '404':
+        description: Користувача не знайдено
         content:
           application/json:
             schema:

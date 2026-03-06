@@ -1,191 +1,242 @@
-storiesRoot:
-  get:
-    operationId: getStories
-    summary: Отримати список історій 📜
-    description: Публічний ендпоінт для перегляду стрічки історій з підтримкою пагінації та фільтрації за категоріями.
-    tags: [Stories]
-    security: [] # Публічний доступ: дозволяємо всім читати історії
-    parameters:
-      - name: page
-        in: query
-        description: Номер сторінки
-        schema: { type: integer, minimum: 1, default: 1 }
-      - name: perPage
-        in: query
-        description: Кількість елементів на сторінці
-        schema: { type: integer, minimum: 1, maximum: 100, default: 10 }
-      - name: category
-        in: query
-        description: ID категорії (MongoDB ObjectId) для фільтрації історій
-        schema: { type: string, pattern: '^[0-9a-fA-F]{24}$' }
-    responses:
-      '200':
-        description: Список історій з пагінацією
+openapi: 3.0.3
+info:
+  title: Travel Stories API
+  version: 1.0.0
+  description: API для роботи з історіями мандрівників
+
+servers:
+  - url: http://localhost:3000
+    description: Локальний сервер
+
+paths:
+  /stories:
+    get:
+      summary: Отримати всі історії
+      operationId: getAllStories
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: perPage
+          schema:
+            type: integer
+            default: 10
+        - in: query
+          name: category
+          schema:
+            type: string
+        - in: query
+          name: author
+          schema:
+            type: string
+        - in: query
+          name: favorite
+          schema:
+            type: boolean
+        - in: query
+          name: sortBy
+          schema:
+            type: string
+            enum: [createdAt, title, favoriteCount]
+            default: createdAt
+        - in: query
+          name: sortOrder
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+      responses:
+        '200':
+          description: Список історій
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoryListResponse'
+
+    post:
+      summary: Створити нову історію
+      operationId: createStory
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
               type: object
               properties:
-                stories:
-                  type: array
-                  items: { $ref: '../components/schemas.yaml#/Story' }
-                totalPages: { type: integer, example: 5 }
-                totalStories: { type: integer, example: 42 }
-      '400':
-        description: Некоректні параметри запиту
-        content:
-          application/json:
-            schema: { $ref: '../components/schemas.yaml#/Error' }
+                title:
+                  type: string
+                article:
+                  type: string
+                category:
+                  type: string
+                img:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Створена історія
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Story'
 
-  post:
-    operationId: createStory
-    summary: Створити нову історію ✍️
-    description: Створення нової історії з можливістю завантаження зображення через multipart/form-data.
-    tags: [Stories]
-    # security не вказуємо — використовується глобальний cookieAuth
-    requestBody:
-      required: true
-      content:
-        multipart/form-data:
-          schema: { $ref: '../components/schemas.yaml#/StoryPost' }
-    responses:
-      '201':
-        description: Історію створено
-        content:
-          application/json:
-            schema: { $ref: '../components/schemas.yaml#/Story' }
-      '400':
-        description: Помилка валідації даних
-        content:
-          application/json:
-            schema: { $ref: '../components/schemas.yaml#/Error' }
-      '401':
-        description: Неавторизований
+  /stories/own:
+    get:
+      summary: Отримати власні історії авторизованого користувача
+      operationId: getOwnStories
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: perPage
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Список власних історій користувача
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoryListResponse'
 
-storiesOwn:
-  get:
-    operationId: getMyStories
-    summary: Мої історії 👤
-    description: Отримання списку історій, створених поточним авторизованим користувачем.
-    tags: [Stories]
-    responses:
-      '200':
-        description: Список власних історій
+  /stories/{id}:
+    get:
+      summary: Отримати історію за ID
+      operationId: getStoryById
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            pattern: '^[a-fA-F0-9]{24}$'
+      responses:
+        '200':
+          description: Дані історії
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Story'
+
+    patch:
+      summary: Оновити історію
+      operationId: updateStory
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
         content:
-          application/json:
+          multipart/form-data:
             schema:
-              type: array
-              items: { $ref: '../components/schemas.yaml#/Story' }
-      '401':
-        description: Неавторизований
+              type: object
+              properties:
+                title:
+                  type: string
+                article:
+                  type: string
+                category:
+                  type: string
+                img:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Оновлена історія
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Story'
 
-storiesSaved:
-  get:
-    operationId: getSavedStories
-    summary: Збережені історії 🔖
-    description: Отримання списку історій, які поточний користувач додав у «Збережені».
-    tags: [Stories]
-    responses:
-      '200':
-        description: Список збережених історій
-        content:
-          application/json:
-            schema:
-              type: array
-              items: { $ref: '../components/schemas.yaml#/Story' }
-      '401':
-        description: Неавторизований
+    delete:
+      summary: Видалити історію
+      operationId: deleteStory
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Історія успішно видалена
 
-storyById:
-  get:
-    operationId: getStoryById
-    summary: Деталі історії 🔍
-    description: Публічний ендпоінт для отримання повної інформації про конкретну історію за її ID.
-    tags: [Stories]
-    security: [] # Публічний доступ: переглядати деталі може кожен
-    parameters:
-      - name: id
-        in: path
-        required: true
-        schema: { type: string, pattern: '^[0-9a-fA-F]{24}$' }
-    responses:
-      '200':
-        description: Об'єкт історії знайдено
-        content:
-          application/json:
-            schema: { $ref: '../components/schemas.yaml#/Story' }
-      '404':
-        description: Історію з таким ID не знайдено
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
 
-  patch:
-    operationId: updateStory
-    summary: Оновити історію ✏️
-    description: Редагування існуючої історії. Доступно тільки автору історії.
-    tags: [Stories]
-    parameters:
-      - name: id
-        in: path
-        required: true
-        schema: { type: string, pattern: '^[0-9a-fA-F]{24}$' }
-    requestBody:
-      content:
-        multipart/form-data:
-          schema: { $ref: '../components/schemas.yaml#/StoryUpdate' }
-    responses:
-      '200':
-        description: Історію успішно оновлено
-        content:
-          application/json:
-            schema: { $ref: '../components/schemas.yaml#/Story' }
-      '401':
-        description: Неавторизований
-      '403':
-        description: Доступ заборонено (ви не є автором цієї історії)
+  schemas:
+    UserMinimal:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        avatarUrl:
+          type: string
 
-  delete:
-    operationId: deleteStory
-    summary: Видалити історію 🗑️
-    tags: [Stories]
-    parameters:
-      - name: id
-        in: path
-        required: true
-        schema: { type: string, pattern: '^[0-9a-fA-F]{24}$' }
-    responses:
-      '204':
-        description: Успішно видалено
-      '401':
-        description: Неавторизований
-      '403':
-        description: Доступ заборонено
+    CategoryMinimal:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
 
-storySave:
-  post:
-    operationId: saveStory
-    summary: Додати в збережені ❤️
-    tags: [Stories]
-    parameters:
-      - name: id
-        in: path
-        required: true
-        schema: { type: string, pattern: '^[0-9a-fA-F]{24}$' }
-    responses:
-      '200':
-        description: Історію додано до вашої колекції
-      '401':
-        description: Неавторизований
+    Story:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        article:
+          type: string
+        img:
+          type: string
+        favoriteCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        formattedDate:
+          type: string
+        category:
+          $ref: '#/components/schemas/CategoryMinimal'
+        ownerId:
+          $ref: '#/components/schemas/UserMinimal'
 
-  delete:
-    operationId: unsaveStory
-    summary: Видалити зі збережених 💔
-    tags: [Stories]
-    parameters:
-      - name: id
-        in: path
-        required: true
-        schema: { type: string, pattern: '^[0-9a-fA-F]{24}$' }
-    responses:
-      '204':
-        description: Видалено зі збережених
-      '401':
-        description: Неавторизований
+    StoryListResponse:
+      type: object
+      properties:
+        stories:
+          type: array
+          items:
+            $ref: '#/components/schemas/Story'
+        totalPages:
+          type: integer
