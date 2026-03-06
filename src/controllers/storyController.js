@@ -11,7 +11,7 @@ export const getAllStories = async (req, res) => {
     category,
     author,
     favorite,
-    sortBy = 'createdAt',
+    sortBy = 'favoriteCount',
     sortOrder = 'desc',
   } = req.query;
 
@@ -31,20 +31,30 @@ export const getAllStories = async (req, res) => {
     filter._id = { $in: user.savedStories };
   }
 
-  const [total, stories] = await Promise.all([
-    Story.countDocuments(filter),
-    Story.find(filter)
-      .skip(skip)
-      .limit(limitNum)
-      .sort({ [sortBy]: sortOrder === 'asc' ? 1 : -1 })
-      .populate('category', 'name')
-      .populate('ownerId', 'name avatarUrl'),
-  ]);
+  let activeSortField = sortBy;
+  if (sortBy === 'createdAt') {
+    activeSortField = '_id';
+  }
 
-  res.status(200).json({
-    stories,
-    totalPages: Math.ceil(total / limitNum),
-  });
+  try {
+    const [total, stories] = await Promise.all([
+      Story.countDocuments(filter),
+      Story.find(filter)
+        .skip(skip)
+        .limit(limitNum)
+        .sort({ [activeSortField]: sortOrder === 'asc' ? 1 : -1 })
+        .populate('category', 'name')
+        .populate('ownerId', 'name avatarUrl'),
+    ]);
+
+    res.status(200).json({
+      stories,
+      totalPages: Math.ceil(total / limitNum),
+    });
+  } catch (error) {
+    console.error("Database Sort Error:", error);
+    res.status(500).json({ message: "Помилка при отриманні історій" });
+  }
 };
 
 export const getStoryById = async (req, res) => {
@@ -155,6 +165,10 @@ export const createStory = async (req, res) => {
     ownerId: req.user._id,
   });
 
+  await User.findByIdAndUpdate(req.user._id, {
+    $inc: { articlesAmount: 1 },
+  });
+
   const populatedStory = await Story.findById(newStory._id)
     .populate('category', 'name')
     .populate('ownerId', 'name avatarUrl');
@@ -197,7 +211,17 @@ export const deleteStory = async (req, res) => {
   const { id } = req.params;
   const story = await Story.findOneAndDelete({ _id: id, ownerId: req.user._id });
 
-  if (!story) throw createHttpError(404, '@Історію не знайдено або ви не власник');
+  if (!story) {
+    throw createHttpError(404, '@Історію не знайдено');
+  }
+
+  if (story.ownerId.toString() !== req.user._id.toString()) {
+    throw createHttpError(403, 'Ви не є власником цієї історії');
+  }
+
+  await User.findByIdAndUpdate(req.user._id, {
+    $inc: { articlesAmount: -1 },
+  });
 
   res.status(204).send();
 };

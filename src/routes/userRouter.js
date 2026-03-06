@@ -5,7 +5,8 @@ import { uploadAvatar } from '../middleware/multer.js';
 import {
   getAllUsers,
   getCurrentUser,
-  getUserById,
+  getUserByIdPublic,
+  getUserByIdPrivate,
   updateUserAvatar,
   updateUserInfo,
 } from '../controllers/userController.js';
@@ -21,6 +22,10 @@ router.get('/', celebrate(getAllUsersSchema), getAllUsers);
 router.get('/me', authenticate, getCurrentUser);
 router.patch('/me/avatar', authenticate, uploadAvatar.single('avatar'), updateUserAvatar);
 router.patch('/me/profile', authenticate, celebrate(updateUserSchema), updateUserInfo);
-router.get('/:id', celebrate(getUserStoriesSchema), getUserById);
+// ПУБЛІЧНА сторінка користувача
+router.get('/:id', celebrate(getUserStoriesSchema), getUserByIdPublic);
+
+// ПРИВАТНА сторінка (додаємо лише цей маршрут)
+router.get('/:id/private', authenticate, celebrate(getUserStoriesSchema),getUserByIdPrivate);
 
 export default router;
