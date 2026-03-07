@@ -1,6 +1,6 @@
 apis:
   travel-stories@v1:
-    root: ./openapi/openapi.yaml
+    root: ./docs/openapi/openapi.yaml
 
 extends:
   - recommended

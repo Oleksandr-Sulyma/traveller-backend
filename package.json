@@ -4,14 +4,12 @@
   "description": "Traveller Backend – fully-featured REST API for user authentication, profiles, and story management.",
   "main": "index.js",
   "type": "module",
-  "scripts": {
-    "dev": "nodemon src/server.js",
-    "start": "node src/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "docs:lint": "redocly lint docs/redocly.yaml",
-    "docs:preview": "redocly preview-docs docs/redocly.yaml",
-    "docs:build": "redocly build-docs docs/redocly.yaml -o dist/index.html"
-  },
+"scripts": {
+  "dev": "nodemon src/server.js",
+  "start": "node src/server.js",
+  "docs:preview": "redocly preview --project-dir docs/openapi --port 8081",
+  "dev:all": "concurrently \"npm run dev\" \"npm run docs:preview\""
+},
   "repository": {
     "type": "git",
     "url": "https://github.com/Oleksandr-Sulyma/traveller-backend.git"
@@ -48,7 +46,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.3",
-    "@redocly/cli": "^1.34.10",
+    "@redocly/cli": "^2.20.4",
     "concurrently": "^9.2.1",
     "eslint": "^10.0.1",
     "globals": "^17.3.0",

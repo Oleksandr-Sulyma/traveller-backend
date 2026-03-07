@@ -1,3 +1,20 @@
+root:
+  get:
+    operationId: getUsers
+    summary: Отримати список усіх користувачів 👥
+    description: Повертає список зареєстрованих користувачів (може бути корисно для адмін-панелі або пошуку).
+    tags:
+      - Users
+    responses:
+      '200':
+        description: Список користувачів
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../components/schemas.yaml#/User'
+
 me:
   get:
     operationId: getCurrentUser
@@ -134,18 +151,6 @@ byIdPrivate:
         schema:
           type: string
           pattern: '^[0-9a-fA-F]{24}$'
-      - name: sortBy
-        in: query
-        schema:
-          type: string
-          enum: [createdAt, title, favoriteCount]
-          default: createdAt
-      - name: sortOrder
-        in: query
-        schema:
-          type: string
-          enum: [asc, desc]
-          default: desc
     responses:
       '200':
         description: Повні дані профілю

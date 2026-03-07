@@ -163,6 +163,35 @@ StoryUpdate:
       type: string
       format: binary
 
+StoryListResponse:
+  type: object
+  properties:
+    stories:
+      type: array
+      items:
+        $ref: '#/Story'
+    pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        perPage:
+          type: integer
+          example: 10
+        totalItems:
+          type: integer
+          example: 42
+        totalPages:
+          type: integer
+          example: 5
+        hasNextPage:
+          type: boolean
+          example: true
+        hasPreviousPage:
+          type: boolean
+          example: false
+
 Category:
   type: object
   properties:

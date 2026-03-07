@@ -49,7 +49,6 @@ storiesRoot:
           application/json:
             schema:
               $ref: '../components/schemas.yaml#/StoryListResponse'
-
   post:
     summary: Створити нову історію ✍️
     operationId: createStory
@@ -136,7 +135,6 @@ storyById:
           application/json:
             schema:
               $ref: '../components/schemas.yaml#/Story'
-
   patch:
     summary: Оновити історію ✏️
     operationId: updateStory
@@ -163,7 +161,6 @@ storyById:
           application/json:
             schema:
               $ref: '../components/schemas.yaml#/Story'
-
   delete:
     summary: Видалити історію 🗑️
     operationId: deleteStory
@@ -181,3 +178,43 @@ storyById:
     responses:
       '204':
         description: Історію видалено
+
+storySave:
+  post:
+    summary: Додати в обране ⭐
+    operationId: addToSave
+    tags:
+      - Stories
+    security:
+      - cookieAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-fA-F0-9]{24}$'
+    responses:
+      '200':
+        description: Історію додано до збережених
+      '401':
+        description: Неавторизований
+  delete:
+    summary: Видалити з обраного ❌
+    operationId: removeFromSave
+    tags:
+      - Stories
+    security:
+      - cookieAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-fA-F0-9]{24}$'
+    responses:
+      '204':
+        description: Історію видалено зі збережених
+      '401':
+        description: Неавторизований

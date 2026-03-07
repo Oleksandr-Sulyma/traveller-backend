@@ -39,10 +39,6 @@ paths:
     $ref: './paths/users.yaml#/root'
   /users/me:
     $ref: './paths/users.yaml#/me'
-  /users/me/avatar:
-    $ref: './paths/users.yaml#/meAvatar'
-  /users/me/profile:
-    $ref: './paths/users.yaml#/meProfile'
   /users/{id}:
     $ref: './paths/users.yaml#/byId'
   /users/{id}/private:
