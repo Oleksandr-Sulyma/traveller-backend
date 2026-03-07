@@ -3,10 +3,11 @@ me:
     operationId: getCurrentUser
     summary: Отримати дані поточного користувача 🆔
     description: Повертає повну інформацію про авторизованого користувача, включно з його історіями та збереженими історіями.
-    tags: [Users]
+    tags:
+      - Users
     responses:
       '200':
-        description: Дані користувача отримано
+        description: Дані профілю, власні та збережені історії
         content:
           application/json:
             schema:
@@ -23,7 +24,7 @@ me:
                   items:
                     $ref: '../components/schemas.yaml#/Story'
       '401':
-        description: Неавторизований (відсутній або недійсний токен)
+        description: Неавторизований
         content:
           application/json:
             schema:
@@ -32,10 +33,10 @@ me:
   patch:
     operationId: updateCurrentUser
     summary: Оновити профіль поточного користувача ✨
-    description: Дозволяє змінити ім'я, опис або завантажити новий аватар через multipart/form-data.
-    tags: [Users]
+    description: Дозволяє змінити ім'я, опис або завантажити новий аватар.
+    tags:
+      - Users
     requestBody:
-      description: Дані для оновлення профілю
       required: true
       content:
         multipart/form-data:
@@ -44,16 +45,13 @@ me:
             properties:
               name:
                 type: string
-                description: Нове відображуване ім'я
-                example: "Олександр Мандрівник"
+                maxLength: 32
               description:
                 type: string
-                description: Коротка інформація про себе
-                example: "Шукаю найкращі краєвиди Карпат"
+                maxLength: 150
               avatar:
                 type: string
                 format: binary
-                description: Файл зображення для аватара
     responses:
       '200':
         description: Профіль успішно оновлено
@@ -62,7 +60,7 @@ me:
             schema:
               $ref: '../components/schemas.yaml#/User'
       '400':
-        description: Некоректні дані (наприклад, занадто великий файл)
+        description: Помилка валідації або завеликий файл
         content:
           application/json:
             schema:
@@ -78,37 +76,32 @@ byId:
   get:
     operationId: getUserByIdPublic
     summary: Публічна сторінка користувача 🔍
-    description: Повертає інформацію про користувача та його публічні історії.
-    tags: [Users]
+    description: Повертає публічну інформацію про користувача та його історії.
+    tags:
+      - Users
     security: []
     parameters:
       - name: id
         in: path
         required: true
-        description: Унікальний ідентифікатор користувача (MongoDB ObjectId)
         schema:
           type: string
           pattern: '^[0-9a-fA-F]{24}$'
-        example: "65fb50c80ae91338641121f5"
       - name: sortBy
         in: query
-        required: false
-        description: Поле для сортування історій
         schema:
           type: string
           enum: [createdAt, title, favoriteCount]
           default: createdAt
       - name: sortOrder
         in: query
-        required: false
-        description: Напрямок сортування
         schema:
           type: string
           enum: [asc, desc]
           default: desc
     responses:
       '200':
-        description: Профіль користувача та історії знайдено
+        description: Публічні дані профілю
         content:
           application/json:
             schema:
@@ -120,14 +113,8 @@ byId:
                   type: array
                   items:
                     $ref: '../components/schemas.yaml#/Story'
-      '400':
-        description: Некоректний формат ID
-        content:
-          application/json:
-            schema:
-              $ref: '../components/schemas.yaml#/Error'
       '404':
-        description: Користувача з таким ID не існує
+        description: Користувача не знайдено
         content:
           application/json:
             schema:
@@ -136,39 +123,32 @@ byId:
 byIdPrivate:
   get:
     operationId: getUserByIdPrivate
-    summary: Отримати приватну сторінку користувача 🔒
-    description: Повертає дані поточного користувача, його власні історії та збережені історії. Доступно лише для авторизованого користувача.
-    tags: [Users]
-    security:
-      - cookieAuth: [] 
+    summary: Приватна сторінка користувача 🔒
+    description: Повертає розширені дані користувача. Доступно лише для власника профілю.
+    tags:
+      - Users
     parameters:
       - name: id
         in: path
         required: true
-        description: Унікальний ID користувача (MongoDB ObjectId)
         schema:
           type: string
           pattern: '^[0-9a-fA-F]{24}$'
-        example: "69a800af3b64575b6915c595"
       - name: sortBy
         in: query
-        required: false
-        description: Поле для сортування історій
         schema:
           type: string
           enum: [createdAt, title, favoriteCount]
           default: createdAt
       - name: sortOrder
         in: query
-        required: false
-        description: Напрямок сортування
         schema:
           type: string
           enum: [asc, desc]
           default: desc
     responses:
       '200':
-        description: Дані користувача, його історії та збережені історії
+        description: Повні дані профілю
         content:
           application/json:
             schema:
@@ -186,13 +166,5 @@ byIdPrivate:
                     $ref: '../components/schemas.yaml#/Story'
       '401':
         description: Неавторизований
-        content:
-          application/json:
-            schema:
-              $ref: '../components/schemas.yaml#/Error'
       '404':
         description: Користувача не знайдено
-        content:
-          application/json:
-            schema:
-              $ref: '../components/schemas.yaml#/Error'

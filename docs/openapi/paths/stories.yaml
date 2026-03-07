@@ -1,242 +1,183 @@
-openapi: 3.0.3
-info:
-  title: Travel Stories API
-  version: 1.0.0
-  description: API для роботи з історіями мандрівників
+storiesRoot:
+  get:
+    summary: Отримати всі історії 🌍
+    operationId: getAllStories
+    tags:
+      - Stories
+    parameters:
+      - in: query
+        name: page
+        schema:
+          type: integer
+          default: 1
+      - in: query
+        name: perPage
+        schema:
+          type: integer
+          default: 10
+      - in: query
+        name: category
+        schema:
+          type: string
+          pattern: '^[a-fA-F0-9]{24}$'
+      - in: query
+        name: author
+        schema:
+          type: string
+          pattern: '^[a-fA-F0-9]{24}$'
+      - in: query
+        name: favorite
+        schema:
+          type: string
+          enum: ['true', 'false']
+      - in: query
+        name: sortBy
+        schema:
+          type: string
+          enum: [createdAt, title, favoriteCount]
+          default: favoriteCount
+      - in: query
+        name: sortOrder
+        schema:
+          type: string
+          enum: [asc, desc]
+          default: desc
+    responses:
+      '200':
+        description: Список історій з пагінацією
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/StoryListResponse'
 
-servers:
-  - url: http://localhost:3000
-    description: Локальний сервер
+  post:
+    summary: Створити нову історію ✍️
+    operationId: createStory
+    tags:
+      - Stories
+    security:
+      - cookieAuth: []
+    requestBody:
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            $ref: '../components/schemas.yaml#/StoryPost'
+    responses:
+      '201':
+        description: Історію успішно створено
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/Story'
 
-paths:
-  /stories:
-    get:
-      summary: Отримати всі історії
-      operationId: getAllStories
-      parameters:
-        - in: query
-          name: page
-          schema:
-            type: integer
-            default: 1
-        - in: query
-          name: perPage
-          schema:
-            type: integer
-            default: 10
-        - in: query
-          name: category
-          schema:
-            type: string
-        - in: query
-          name: author
-          schema:
-            type: string
-        - in: query
-          name: favorite
-          schema:
-            type: boolean
-        - in: query
-          name: sortBy
-          schema:
-            type: string
-            enum: [createdAt, title, favoriteCount]
-            default: createdAt
-        - in: query
-          name: sortOrder
-          schema:
-            type: string
-            enum: [asc, desc]
-            default: desc
-      responses:
-        '200':
-          description: Список історій
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/StoryListResponse'
+storiesOwn:
+  get:
+    summary: Власні історії 👤
+    operationId: getOwnStories
+    tags:
+      - Stories
+    security:
+      - cookieAuth: []
+    parameters:
+      - in: query
+        name: page
+        schema:
+          type: integer
+          default: 1
+      - in: query
+        name: perPage
+        schema:
+          type: integer
+          default: 10
+    responses:
+      '200':
+        description: Список ваших історій
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/StoryListResponse'
 
-    post:
-      summary: Створити нову історію
-      operationId: createStory
-      security:
-        - bearerAuth: []
-      requestBody:
+storiesSaved:
+  get:
+    summary: Збережені історії ⭐
+    operationId: getSavedStories
+    tags:
+      - Stories
+    security:
+      - cookieAuth: []
+    responses:
+      '200':
+        description: Список збережених історій
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../components/schemas.yaml#/Story'
+
+storyById:
+  get:
+    summary: Деталі історії 📖
+    operationId: getStoryById
+    tags:
+      - Stories
+    parameters:
+      - name: id
+        in: path
         required: true
+        schema:
+          type: string
+          pattern: '^[a-fA-F0-9]{24}$'
+    responses:
+      '200':
+        description: Дані історії отримано
         content:
-          multipart/form-data:
+          application/json:
             schema:
-              type: object
-              properties:
-                title:
-                  type: string
-                article:
-                  type: string
-                category:
-                  type: string
-                img:
-                  type: string
-                  format: binary
-      responses:
-        '201':
-          description: Створена історія
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Story'
+              $ref: '../components/schemas.yaml#/Story'
 
-  /stories/own:
-    get:
-      summary: Отримати власні історії авторизованого користувача
-      operationId: getOwnStories
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: query
-          name: page
+  patch:
+    summary: Оновити історію ✏️
+    operationId: updateStory
+    tags:
+      - Stories
+    security:
+      - cookieAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-fA-F0-9]{24}$'
+    requestBody:
+      content:
+        multipart/form-data:
           schema:
-            type: integer
-            default: 1
-        - in: query
-          name: perPage
-          schema:
-            type: integer
-            default: 10
-      responses:
-        '200':
-          description: Список власних історій користувача
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/StoryListResponse'
-
-  /stories/{id}:
-    get:
-      summary: Отримати історію за ID
-      operationId: getStoryById
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            pattern: '^[a-fA-F0-9]{24}$'
-      responses:
-        '200':
-          description: Дані історії
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Story'
-
-    patch:
-      summary: Оновити історію
-      operationId: updateStory
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: false
+            $ref: '../components/schemas.yaml#/StoryUpdate'
+    responses:
+      '200':
+        description: Історію оновлено
         content:
-          multipart/form-data:
+          application/json:
             schema:
-              type: object
-              properties:
-                title:
-                  type: string
-                article:
-                  type: string
-                category:
-                  type: string
-                img:
-                  type: string
-                  format: binary
-      responses:
-        '200':
-          description: Оновлена історія
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Story'
+              $ref: '../components/schemas.yaml#/Story'
 
-    delete:
-      summary: Видалити історію
-      operationId: deleteStory
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-      responses:
-        '204':
-          description: Історія успішно видалена
-
-components:
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-
-  schemas:
-    UserMinimal:
-      type: object
-      properties:
-        id:
+  delete:
+    summary: Видалити історію 🗑️
+    operationId: deleteStory
+    tags:
+      - Stories
+    security:
+      - cookieAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
           type: string
-        name:
-          type: string
-        avatarUrl:
-          type: string
-
-    CategoryMinimal:
-      type: object
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-
-    Story:
-      type: object
-      properties:
-        id:
-          type: string
-        title:
-          type: string
-        article:
-          type: string
-        img:
-          type: string
-        favoriteCount:
-          type: integer
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
-        formattedDate:
-          type: string
-        category:
-          $ref: '#/components/schemas/CategoryMinimal'
-        ownerId:
-          $ref: '#/components/schemas/UserMinimal'
-
-    StoryListResponse:
-      type: object
-      properties:
-        stories:
-          type: array
-          items:
-            $ref: '#/components/schemas/Story'
-        totalPages:
-          type: integer
+          pattern: '^[a-fA-F0-9]{24}$'
+    responses:
+      '204':
+        description: Історію видалено
