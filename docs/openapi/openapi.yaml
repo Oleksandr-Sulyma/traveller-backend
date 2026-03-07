@@ -2,7 +2,9 @@ openapi: 3.0.0
 info:
   title: Travel Stories API 🌍
   version: 1.0.0
-  description: API для сервісу обміну історіями подорожей. Дозволяє створювати, читати та керувати історіями.
+  description: >
+    API для сервісу обміну історіями подорожей.
+    Дозволяє користувачам реєструватися, створювати власні історії, завантажувати фото та зберігати цікаві розповіді інших мандрівників.
   license:
     name: Apache 2.0
     url: https://www.apache.org/licenses/LICENSE-2.0.html
@@ -11,7 +13,6 @@ servers:
   - url: ${API_URL}
     description: "Бекенд (динамічно через змінну оточення)"
 
-# 🔐 Глобальний захист
 security:
   - cookieAuth: []
 
@@ -33,6 +34,8 @@ paths:
     $ref: './paths/auth.yaml#/reset-password'
 
   # --- Users ---
+  /users:
+    $ref: './paths/users.yaml#/root'
   /users/me:
     $ref: './paths/users.yaml#/me'
   /users/{id}:
@@ -62,10 +65,13 @@ components:
       type: apiKey
       in: cookie
       name: accessToken
+      description: "Access токен, який встановлюється автоматично в куки після логіну"
 
   schemas:
     User:
       $ref: './components/schemas.yaml#/User'
+    UserResponse:
+      $ref: './components/schemas.yaml#/UserResponse'
     Story:
       $ref: './components/schemas.yaml#/Story'
     Category:

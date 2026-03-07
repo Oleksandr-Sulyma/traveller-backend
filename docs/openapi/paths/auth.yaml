@@ -1,10 +1,11 @@
 register:
   post:
     summary: Реєстрація користувача 📝
+    description: Створює новий акаунт та автоматично встановлює сесійні куки.
     operationId: registerUser
     tags:
       - Auth
-    security: [] # Публічний доступ
+    security: []
     requestBody:
       required: true
       content:
@@ -34,10 +35,11 @@ register:
 login:
   post:
     summary: Вхід у систему 🔑
+    description: Перевіряє дані користувача та видає сесійні куки.
     operationId: loginUser
     tags:
       - Auth
-    security: [] # Публічний доступ
+    security: []
     requestBody:
       required: true
       content:
@@ -61,6 +63,7 @@ login:
 refresh:
   post:
     summary: Оновлення сесії 🔄
+    description: Використовує refreshToken з кук для генерації нової сесії.
     operationId: refreshUserSession
     tags:
       - Auth
@@ -76,7 +79,7 @@ refresh:
                   type: string
                   example: 'Сесію оновлено'
       '401':
-        description: Будь ласка, увійдіть у свій акаунт
+        description: Сесія недійсна або відсутня
         content:
           application/json:
             schema:
@@ -85,12 +88,15 @@ refresh:
 logout:
   post:
     summary: Вихід із системи 🚪
+    description: Видаляє активну сесію з бази даних та очищує куки на клієнті.
     operationId: logoutUser
     tags:
       - Auth
+    security:
+      - cookieAuth: []
     responses:
       '204':
-        description: Успішний вихід
+        description: Успішний вихід (без тіла відповіді)
       '401':
         description: Неавторизований
         content:
@@ -101,9 +107,12 @@ logout:
 check:
   get:
     summary: Перевірка поточної сесії ✅
+    description: Повертає дані користувача, якщо сесія в куках активна.
     operationId: checkSession
     tags:
       - Auth
+    security:
+      - cookieAuth: []
     responses:
       '200':
         description: Користувач авторизований
@@ -121,21 +130,17 @@ check:
 request-reset-email:
   post:
     summary: Запит на відновлення пароля 📧
+    description: Надсилає на пошту посилання з тимчасовим токеном.
     operationId: requestResetEmail
     tags:
       - Auth
-    security: [] # Публічний доступ
+    security: []
     requestBody:
       required: true
       content:
         application/json:
           schema:
-            type: object
-            required: [email]
-            properties:
-              email:
-                type: string
-                format: email
+            $ref: '../components/schemas.yaml#/RequestResetEmailRequest'
     responses:
       '200':
         description: Лист надіслано
@@ -154,7 +159,7 @@ request-reset-email:
             schema:
               $ref: '../components/schemas.yaml#/Error'
       '404':
-        description: Користувача не знайдено
+        description: Користувача з такою поштою не існує
         content:
           application/json:
             schema:
@@ -163,23 +168,17 @@ request-reset-email:
 reset-password:
   post:
     summary: Встановлення нового пароля 🆕
+    description: Оновлює пароль користувача за наявності валідного токена.
     operationId: resetPassword
     tags:
       - Auth
-    security: [] # Публічний доступ
+    security: []
     requestBody:
       required: true
       content:
         application/json:
           schema:
-            type: object
-            required: [token, password]
-            properties:
-              token:
-                type: string
-              password:
-                type: string
-                minLength: 8
+            $ref: '../components/schemas.yaml#/ResetPasswordRequest'
     responses:
       '200':
         description: Пароль змінено
@@ -192,7 +191,7 @@ reset-password:
                   type: string
                   example: 'Пароль успішно змінено'
       '400':
-        description: Некоректний токен або пароль
+        description: Некоректний або прострочений токен
         content:
           application/json:
             schema:

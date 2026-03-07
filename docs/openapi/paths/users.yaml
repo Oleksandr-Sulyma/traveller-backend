@@ -1,198 +1,38 @@
+root:
+  get:
+    summary: Список усіх користувачів
+    tags:
+      - Users
+    responses:
+      '200':
+        description: OK
 me:
   get:
-    operationId: getCurrentUser
-    summary: Отримати дані поточного користувача 🆔
-    description: Повертає повну інформацію про авторизованого користувача, включно з його історіями та збереженими історіями.
-    tags: [Users]
+    summary: Мій профіль
+    tags:
+      - Users
     responses:
       '200':
-        description: Дані користувача отримано
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                user:
-                  $ref: '../components/schemas.yaml#/User'
-                stories:
-                  type: array
-                  items:
-                    $ref: '../components/schemas.yaml#/Story'
-                savedStories:
-                  type: array
-                  items:
-                    $ref: '../components/schemas.yaml#/Story'
-      '401':
-        description: Неавторизований (відсутній або недійсний токен)
-        content:
-          application/json:
-            schema:
-              $ref: '../components/schemas.yaml#/Error'
-
-  patch:
-    operationId: updateCurrentUser
-    summary: Оновити профіль поточного користувача ✨
-    description: Дозволяє змінити ім'я, опис або завантажити новий аватар через multipart/form-data.
-    tags: [Users]
-    requestBody:
-      description: Дані для оновлення профілю
-      required: true
-      content:
-        multipart/form-data:
-          schema:
-            type: object
-            properties:
-              name:
-                type: string
-                description: Нове відображуване ім'я
-                example: "Олександр Мандрівник"
-              description:
-                type: string
-                description: Коротка інформація про себе
-                example: "Шукаю найкращі краєвиди Карпат"
-              avatar:
-                type: string
-                format: binary
-                description: Файл зображення для аватара
-    responses:
-      '200':
-        description: Профіль успішно оновлено
-        content:
-          application/json:
-            schema:
-              $ref: '../components/schemas.yaml#/User'
-      '400':
-        description: Некоректні дані (наприклад, занадто великий файл)
-        content:
-          application/json:
-            schema:
-              $ref: '../components/schemas.yaml#/Error'
-      '401':
-        description: Неавторизований
-        content:
-          application/json:
-            schema:
-              $ref: '../components/schemas.yaml#/Error'
-
+        description: OK
 byId:
   get:
-    operationId: getUserByIdPublic
-    summary: Публічна сторінка користувача 🔍
-    description: Повертає інформацію про користувача та його публічні історії.
-    tags: [Users]
-    security: []
+    summary: Користувач за ID
+    tags:
+      - Users
     parameters:
       - name: id
         in: path
         required: true
-        description: Унікальний ідентифікатор користувача (MongoDB ObjectId)
         schema:
           type: string
-          pattern: '^[0-9a-fA-F]{24}$'
-        example: "65fb50c80ae91338641121f5"
-      - name: sortBy
-        in: query
-        required: false
-        description: Поле для сортування історій
-        schema:
-          type: string
-          enum: [createdAt, title, favoriteCount]
-          default: createdAt
-      - name: sortOrder
-        in: query
-        required: false
-        description: Напрямок сортування
-        schema:
-          type: string
-          enum: [asc, desc]
-          default: desc
     responses:
       '200':
-        description: Профіль користувача та історії знайдено
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                user:
-                  $ref: '../components/schemas.yaml#/User'
-                stories:
-                  type: array
-                  items:
-                    $ref: '../components/schemas.yaml#/Story'
-      '400':
-        description: Некоректний формат ID
-        content:
-          application/json:
-            schema:
-              $ref: '../components/schemas.yaml#/Error'
-      '404':
-        description: Користувача з таким ID не існує
-        content:
-          application/json:
-            schema:
-              $ref: '../components/schemas.yaml#/Error'
-
+        description: OK
 byIdPrivate:
   get:
-    operationId: getUserByIdPrivate
-    summary: Отримати приватну сторінку користувача 🔒
-    description: Повертає дані поточного користувача, його власні історії та збережені історії. Доступно лише для авторизованого користувача.
-    tags: [Users]
-    security:
-      - cookieAuth: [] 
-    parameters:
-      - name: id
-        in: path
-        required: true
-        description: Унікальний ID користувача (MongoDB ObjectId)
-        schema:
-          type: string
-          pattern: '^[0-9a-fA-F]{24}$'
-        example: "69a800af3b64575b6915c595"
-      - name: sortBy
-        in: query
-        required: false
-        description: Поле для сортування історій
-        schema:
-          type: string
-          enum: [createdAt, title, favoriteCount]
-          default: createdAt
-      - name: sortOrder
-        in: query
-        required: false
-        description: Напрямок сортування
-        schema:
-          type: string
-          enum: [asc, desc]
-          default: desc
+    summary: Приватні дані
+    tags:
+      - Users
     responses:
       '200':
-        description: Дані користувача, його історії та збережені історії
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                user:
-                  $ref: '../components/schemas.yaml#/User'
-                stories:
-                  type: array
-                  items:
-                    $ref: '../components/schemas.yaml#/Story'
-                savedStories:
-                  type: array
-                  items:
-                    $ref: '../components/schemas.yaml#/Story'
-      '401':
-        description: Неавторизований
-        content:
-          application/json:
-            schema:
-              $ref: '../components/schemas.yaml#/Error'
-      '404':
-        description: Користувача не знайдено
-        content:
-          application/json:
-            schema:
-              $ref: '../components/schemas.yaml#/Error'
+        description: OK

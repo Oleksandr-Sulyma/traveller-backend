@@ -3,7 +3,8 @@ categoriesRoot:
     operationId: getCategories
     summary: Отримати список категорій 🏷️
     description: Повертає повний список доступних категорій для подорожей (наприклад, Nature, City, Food).
-    tags: [Categories]
+    tags:
+      - Categories
     responses:
       '200':
         description: Список категорій отримано успішно

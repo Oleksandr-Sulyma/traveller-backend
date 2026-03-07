@@ -1,4 +1,3 @@
-# Основні моделі даних
 User:
   type: object
   properties:
@@ -7,20 +6,21 @@ User:
       example: '65fb50c80ae91338641121f5'
     name:
       type: string
-      example: 'Мандрівник'
+      example: 'Олександр'
     email:
       type: string
       format: email
-      example: 'user@example.com'
+      example: 'alex@example.com'
     avatarUrl:
       type: string
       nullable: true
-      example: 'https://example.com/avatar.jpg'
+      example: 'https://res.cloudinary.com/demo/image/upload/v1/avatar.jpg'
     articlesAmount:
       type: integer
       default: 0
     description:
       type: string
+      maxLength: 150
       nullable: true
     savedStories:
       type: array
@@ -36,10 +36,10 @@ User:
 
 UserResponse:
   type: object
+  description: Стандартна відповідь при реєстрації, логіні або перевірці сесії
   properties:
     id:
       type: string
-      example: '65fb50c80ae91338641121f5'
     name:
       type: string
     email:
@@ -55,16 +55,15 @@ RegisterRequest:
     name:
       type: string
       minLength: 2
-      example: 'Мандрівник'
+      maxLength: 32
     email:
       type: string
       format: email
-      example: 'user@example.com'
+      maxLength: 64
     password:
       type: string
-      format: password
       minLength: 8
-      example: 'password123'
+      maxLength: 128
 
 LoginRequest:
   type: object
@@ -73,24 +72,46 @@ LoginRequest:
     email:
       type: string
       format: email
-      example: 'user@example.com'
     password:
       type: string
-      format: password
-      example: 'password123'
+
+RequestResetEmailRequest:
+  type: object
+  required: [email]
+  properties:
+    email:
+      type: string
+      format: email
+
+ResetPasswordRequest:
+  type: object
+  required: [token, password]
+  properties:
+    token:
+      type: string
+    password:
+      type: string
+      minLength: 8
 
 Story:
   type: object
   properties:
     id:
       type: string
-      example: '65fb50c80ae91338641121f6'
     title:
       type: string
+      example: 'Захід сонця в горах'
     article:
       type: string
     img:
       type: string
+      format: uri
+    favoriteCount:
+      type: integer
+      default: 0
+    formattedDate:
+      type: string
+      example: '24.05.2024'
     category:
       type: object
       properties:
@@ -102,12 +123,6 @@ Story:
         id: { type: string }
         name: { type: string }
         avatarUrl: { type: string, nullable: true }
-    favoriteCount:
-      type: integer
-      default: 0
-    formattedDate:
-      type: string
-      example: '24.05.2024'
     createdAt:
       type: string
       format: date-time
@@ -131,31 +146,67 @@ StoryPost:
     img:
       type: string
       format: binary
+      description: Файл зображення (multipart/form-data)
 
 StoryUpdate:
   type: object
   properties:
-    title: { type: string, maxLength: 80 }
-    article: { type: string, maxLength: 2500 }
-    category: { type: string }
-    img: { type: string, format: binary }
+    title:
+      type: string
+      maxLength: 80
+    article:
+      type: string
+      maxLength: 2500
+    category:
+      type: string
+    img:
+      type: string
+      format: binary
+
+StoryListResponse:
+  type: object
+  properties:
+    stories:
+      type: array
+      items:
+        $ref: '#/Story'
+    pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        perPage:
+          type: integer
+          example: 10
+        totalItems:
+          type: integer
+          example: 42
+        totalPages:
+          type: integer
+          example: 5
+        hasNextPage:
+          type: boolean
+          example: true
+        hasPreviousPage:
+          type: boolean
+          example: false
 
 Category:
   type: object
-  required: [id, name]
   properties:
     id:
       type: string
-      example: '65fb50c80ae91338641121f0'
     name:
       type: string
-      example: 'Travel'
+      example: 'Nature'
 
 Error:
   type: object
   properties:
-    status: { type: integer }
-    message: { type: string }
-    errors:
-      type: array
-      items: { type: object }
+    status:
+      type: integer
+      example: 400
+    message:
+      type: string
+      example: 'Помилка валідації'
