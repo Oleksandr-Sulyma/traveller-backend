@@ -13,7 +13,6 @@ servers:
   - url: ${API_URL}
     description: "Бекенд (динамічно через змінну оточення)"
 
-# 🔐 Глобальний захист через Access Token у Cookies
 security:
   - cookieAuth: []
 

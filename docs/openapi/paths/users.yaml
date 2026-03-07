@@ -1,175 +1,38 @@
 root:
   get:
-    operationId: getUsers
-    summary: Отримати список усіх користувачів 👥
-    description: Повертає список зареєстрованих користувачів (може бути корисно для адмін-панелі або пошуку).
+    summary: Список усіх користувачів
     tags:
       - Users
     responses:
       '200':
-        description: Список користувачів
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                $ref: '../components/schemas.yaml#/User'
-
+        description: OK
 me:
   get:
-    operationId: getCurrentUser
-    summary: Отримати дані поточного користувача 🆔
-    description: Повертає повну інформацію про авторизованого користувача, включно з його історіями та збереженими історіями.
+    summary: Мій профіль
     tags:
       - Users
     responses:
       '200':
-        description: Дані профілю, власні та збережені історії
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                user:
-                  $ref: '../components/schemas.yaml#/User'
-                stories:
-                  type: array
-                  items:
-                    $ref: '../components/schemas.yaml#/Story'
-                savedStories:
-                  type: array
-                  items:
-                    $ref: '../components/schemas.yaml#/Story'
-      '401':
-        description: Неавторизований
-        content:
-          application/json:
-            schema:
-              $ref: '../components/schemas.yaml#/Error'
-
-  patch:
-    operationId: updateCurrentUser
-    summary: Оновити профіль поточного користувача ✨
-    description: Дозволяє змінити ім'я, опис або завантажити новий аватар.
-    tags:
-      - Users
-    requestBody:
-      required: true
-      content:
-        multipart/form-data:
-          schema:
-            type: object
-            properties:
-              name:
-                type: string
-                maxLength: 32
-              description:
-                type: string
-                maxLength: 150
-              avatar:
-                type: string
-                format: binary
-    responses:
-      '200':
-        description: Профіль успішно оновлено
-        content:
-          application/json:
-            schema:
-              $ref: '../components/schemas.yaml#/User'
-      '400':
-        description: Помилка валідації або завеликий файл
-        content:
-          application/json:
-            schema:
-              $ref: '../components/schemas.yaml#/Error'
-      '401':
-        description: Неавторизований
-        content:
-          application/json:
-            schema:
-              $ref: '../components/schemas.yaml#/Error'
-
+        description: OK
 byId:
   get:
-    operationId: getUserByIdPublic
-    summary: Публічна сторінка користувача 🔍
-    description: Повертає публічну інформацію про користувача та його історії.
+    summary: Користувач за ID
     tags:
       - Users
-    security: []
     parameters:
       - name: id
         in: path
         required: true
         schema:
           type: string
-          pattern: '^[0-9a-fA-F]{24}$'
-      - name: sortBy
-        in: query
-        schema:
-          type: string
-          enum: [createdAt, title, favoriteCount]
-          default: createdAt
-      - name: sortOrder
-        in: query
-        schema:
-          type: string
-          enum: [asc, desc]
-          default: desc
     responses:
       '200':
-        description: Публічні дані профілю
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                user:
-                  $ref: '../components/schemas.yaml#/User'
-                stories:
-                  type: array
-                  items:
-                    $ref: '../components/schemas.yaml#/Story'
-      '404':
-        description: Користувача не знайдено
-        content:
-          application/json:
-            schema:
-              $ref: '../components/schemas.yaml#/Error'
-
+        description: OK
 byIdPrivate:
   get:
-    operationId: getUserByIdPrivate
-    summary: Приватна сторінка користувача 🔒
-    description: Повертає розширені дані користувача. Доступно лише для власника профілю.
+    summary: Приватні дані
     tags:
       - Users
-    parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          pattern: '^[0-9a-fA-F]{24}$'
     responses:
       '200':
-        description: Повні дані профілю
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                user:
-                  $ref: '../components/schemas.yaml#/User'
-                stories:
-                  type: array
-                  items:
-                    $ref: '../components/schemas.yaml#/Story'
-                savedStories:
-                  type: array
-                  items:
-                    $ref: '../components/schemas.yaml#/Story'
-      '401':
-        description: Неавторизований
-      '404':
-        description: Користувача не знайдено
+        description: OK

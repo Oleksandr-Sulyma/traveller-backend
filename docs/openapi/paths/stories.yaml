@@ -49,6 +49,7 @@ storiesRoot:
           application/json:
             schema:
               $ref: '../components/schemas.yaml#/StoryListResponse'
+
   post:
     summary: Створити нову історію ✍️
     operationId: createStory
@@ -69,6 +70,12 @@ storiesRoot:
           application/json:
             schema:
               $ref: '../components/schemas.yaml#/Story'
+      '400':
+        description: Помилка валідації
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
 
 storiesOwn:
   get:
@@ -135,6 +142,13 @@ storyById:
           application/json:
             schema:
               $ref: '../components/schemas.yaml#/Story'
+      '404':
+        description: Історію не знайдено
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+
   patch:
     summary: Оновити історію ✏️
     operationId: updateStory
@@ -161,6 +175,7 @@ storyById:
           application/json:
             schema:
               $ref: '../components/schemas.yaml#/Story'
+
   delete:
     summary: Видалити історію 🗑️
     operationId: deleteStory
@@ -199,6 +214,7 @@ storySave:
         description: Історію додано до збережених
       '401':
         description: Неавторизований
+
   delete:
     summary: Видалити з обраного ❌
     operationId: removeFromSave
@@ -216,5 +232,3 @@ storySave:
     responses:
       '204':
         description: Історію видалено зі збережених
-      '401':
-        description: Неавторизований
